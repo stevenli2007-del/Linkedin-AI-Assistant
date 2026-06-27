@@ -3,6 +3,7 @@ import type { UserProfile } from "@/types";
 export interface AppSettings {
   userProfile: UserProfile;
   apiKey: string;
+  apiMode: "shared" | "custom";
   model: string;
   temperature: number;
 }
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     userInterests: "",
   },
   apiKey: "",
+  apiMode: "shared",
   model: "deepseek-chat",
   temperature: 0.7,
 };
@@ -68,6 +70,7 @@ function mergeSettings(stored: Partial<AppSettings> | undefined): AppSettings {
       ...(stored.userProfile ?? {}),
     },
     apiKey: typeof stored.apiKey === "string" ? stored.apiKey : DEFAULT_SETTINGS.apiKey,
+    apiMode: stored.apiMode === "custom" ? "custom" : "shared",
     model: typeof stored.model === "string" ? stored.model : DEFAULT_SETTINGS.model,
     temperature:
       typeof stored.temperature === "number"

@@ -1,0 +1,12 @@
+name = "linkedin-ai-backend"
+main = "src/index.ts"
+compatibility_date = "2023-06-21"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+API_VERSION = "v1"
+ENVIRONMENT = "production"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT_STORE"
+id = "990267ff913c4c95af63dbea5fb7de47"

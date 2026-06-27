@@ -26,3 +26,10 @@ desktop.ini
 # Logs
 *.log
 npm-debug.log*
+
+# Backend local dev state
+backend/.wrangler/
+backend/.dev.vars
+backend/test-*.js
+backend/test-*.json
+backend/SPRINT09_STATUS.md

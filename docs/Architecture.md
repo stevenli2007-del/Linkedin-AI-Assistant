@@ -3,14 +3,20 @@
 ## Overview
 
 LinkedIn AI Networking Assistant is a Chrome MV3 extension that generates
-personalized LinkedIn connection messages using the DeepSeek API. The extension
-runs entirely client-side — no backend, no analytics, no tracking.
+personalized LinkedIn connection messages using AI. The extension supports two
+API modes:
+
+- **Shared Mode**: Use the extension owner's API key (via backend proxy)
+- **Custom Mode**: Use your own DeepSeek API key
+
+All AI requests go through a backend proxy (Cloudflare Workers) to support
+future SaaS features, rate limiting, and API key management.
 
 ---
 
 ## Data Flow
 
-### Flow 1: Generate Connection Messages
+### Flow 1: Generate Connection Messages (Phase 09+)
 
 ```
 User clicks "Generate Messages" in Popup
@@ -28,7 +34,13 @@ Popup receives TargetProfile, calls Prompt Builder
 Prompt Builder combines UserProfile + TargetProfile into system/user prompts
       |
       v
-LLM Service calls DeepSeek API (with exponential backoff retry)
+LLM Service calls Backend Proxy API (with exponential backoff retry)
+      |
+      v
+Backend Proxy calls AI Provider (DeepSeek API or custom key)
+      |
+      v
+Backend Proxy returns JSON response to Extension
       |
       v
 LLM Service parses JSON response into 4 GeneratedMessages
@@ -67,7 +79,13 @@ Settings detects pendingRawProfileText via storage.onChanged listener
 Settings sends raw text to LLM Service for refinement (refineProfile)
       |
       v
-LLM returns structured UserProfile
+LLM Service calls Backend Proxy API
+      |
+      v
+Backend Proxy calls AI Provider
+      |
+      v
+Backend Proxy returns structured UserProfile
       |
       v
 Settings displays AI-refined profile preview for user review
@@ -85,13 +103,27 @@ User clicks "Apply" -> profile saved to appSettings
 | Content Script     | content/index.ts         | Detect LinkedIn profile page, handle EXTRACT_PROFILE message, auto-import   |
 | Profile Extractor  | content/extractor.ts     | Read visible profile data from DOM (multiple selector strategies + retry)   |
 | Prompt Builder     | services/prompt.ts       | Build prompts for message generation and profile refinement                 |
-| LLM Service        | services/llm.ts          | Call DeepSeek API with retry + backoff, parse JSON responses                |
+| LLM Service        | services/llm.ts          | Call Backend Proxy API with retry + backoff, parse JSON responses           |
+| Client ID Service  | services/client-id.ts    | Generate and persist anonymous Client ID (UUID) in Chrome Storage          |
 | Settings Service   | services/settings.ts     | Load/save settings, manage import-pending flags and raw text transfer       |
 | Popup UI           | popup/App.tsx            | Main UI: generate messages, display results, onboarding guide, footer      |
-| Settings UI        | popup/Settings.tsx       | API key, model/temperature, profile fields, LinkedIn import, FAQ            |
+| Settings UI        | popup/Settings.tsx       | API mode selector, API key, profile fields, LinkedIn import, FAQ            |
 | Error Boundary     | popup/ErrorBoundary.tsx  | Catch and display uncaught React render errors                              |
-| Background Worker  | background/index.ts      | Service worker (Chrome MV3) — reserved for Phase 09 backend proxy           |
+| Background Worker  | background/index.ts      | Service worker (Chrome MV3) — handles extension lifecycle events            |
 | Types              | types/index.ts           | Shared TypeScript interfaces (UserProfile, TargetProfile, etc.)             |
+
+### Backend Proxy (Cloudflare Workers)
+
+| Module             | File(s)                              | Responsibility                                                              |
+| ------------------ | ------------------------------------ | --------------------------------------------------------------------------- |
+| Worker Entry       | backend/src/index.ts                 | Request routing, CORS, rate limiting, request context builder              |
+| Provider Factory   | backend/src/services/provider-factory.ts | Create AI provider instance based on configuration                     |
+| DeepSeek Provider  | backend/src/services/providers/deepseek.ts | DeepSeek API integration (OpenAI-compatible)                       |
+| Generate Route     | backend/src/routes/generate.ts       | POST /api/v1/generate endpoint                                             |
+| Refine Profile Route | backend/src/routes/refine-profile.ts | POST /api/v1/refine-profile endpoint                                     |
+| Rate Limiter       | backend/src/middleware/rate-limiter.ts | Rate limiting middleware (10 req/min per client)                        |
+| Error Handler      | backend/src/middleware/error-handler.ts | Unified error handling with error codes                                |
+| Response Utils     | backend/src/utils/response.ts        | successResponse(), errorResponse() with errorCode support                  |
 
 ---
 
@@ -168,16 +200,19 @@ interface AppSettings {
 
 ---
 
-## LLM Service (DeepSeek API)
+## LLM Service (Backend Proxy API)
 
-- **Endpoint:** `https://api.deepseek.com/v1/chat/completions`
-- **Protocol:** OpenAI-compatible Chat Completions format
-- **Model:** Configurable (default: `deepseek-chat`)
+- **Endpoint:** `https://linkedin-ai-backend.stevenli2007.workers.dev/api/v1/generate`
+- **Protocol:** HTTP POST with JSON body
+- **Model:** Configured in backend (currently DeepSeek)
 - **Retry:** Exponential backoff for 429/500/502/503/timeout/network errors
   - Max 3 retries with 1s -> 2s -> 4s delays
   - No retry for 401 (invalid key) or 402 (insufficient balance)
 - **Timeout:** 30 seconds per request
-- **Response parsing:** Handles markdown code-fenced JSON, validates message styles
+- **Response parsing:** Handles backend response format, validates message styles
+- **API Modes:**
+  - `shared`: Use backend's API key (no setup needed)
+  - `custom`: Use user's own DeepSeek API key (sent via X-Custom-Api-Key header)
 
 ---
 
@@ -186,20 +221,67 @@ interface AppSettings {
 | Layer                  | Measure                                                              |
 | ---------------------- | -------------------------------------------------------------------- |
 | Content Security Policy| `script-src 'self'; object-src 'self'` (no inline scripts, no eval)  |
-| Host Permissions       | `linkedin.com` + `api.deepseek.com` only                             |
+| Host Permissions       | `linkedin.com` + `linkedin-ai-backend.stevenli2007.workers.dev` only |
 | Content Script Scope   | `https://www.linkedin.com/*` and `https://linkedin.com/*` only       |
-| API Key Storage        | `chrome.storage.local` — never transmitted except to DeepSeek API    |
+| API Key Storage        | `chrome.storage.local` — only used in custom mode                   |
+| Shared Mode            | API key stored on backend (Cloudflare Workers secrets)              |
 | No Auto-Send           | User always copies message and sends manually                        |
 | No Analytics           | No tracking, no telemetry, no third-party scripts                    |
 | web_accessible_resources | None — privacy.html opens as an extension page via `chrome.tabs.create` |
+| Rate Limiting          | 10 requests/minute per Client ID (Cloudflare KV)                    |
+| Request Logging        | Request metadata logged (no user privacy data)                       |
 
 ---
 
 ## Background Service Worker
 
-Currently minimal — only registers `chrome.runtime.onInstalled` listener.
-Reserved for Phase 09 (Backend Proxy) which will add API key proxying to
-avoid exposing user API keys in client-side code.
+Minimal — registers `chrome.runtime.onInstalled` listener for extension
+lifecycle events. Future use: offline message queue, push notifications.
+
+---
+
+## Backend Proxy Architecture (Phase 09)
+
+### Cloudflare Workers Deployment
+
+- **URL:** `https://linkedin-ai-backend.stevenli2007.workers.dev`
+- **API Version:** `/api/v1/`
+- **Endpoints:**
+  - `POST /api/v1/generate` — Generate AI messages
+  - `POST /api/v1/refine-profile` — Refine LinkedIn profile
+  - `GET /health` — Health check
+
+### Provider Abstraction
+
+The backend uses a provider abstraction pattern to support multiple AI providers:
+
+```typescript
+interface AIProvider {
+  generate(request, customApiKey?): Promise<GenerateResponse>;
+  refineProfile(request, customApiKey?): Promise<RefineProfileResponse>;
+}
+```
+
+Currently implemented: `DeepSeekProvider`
+
+Future: OpenAI, Claude, local models
+
+### Rate Limiting
+
+- **Storage:** Cloudflare KV (`RATE_LIMIT_STORE`)
+- **Limit:** 10 requests/minute per Client ID
+- **Response:** HTTP 429 with `errorCode: "RATE_LIMITED"`
+
+### Error Handling
+
+All errors return JSON with `errorCode`:
+
+- `INVALID_REQUEST` (400) — Bad request format
+- `UNAUTHORIZED` (401) — Invalid API key
+- `RATE_LIMITED` (429) — Rate limit exceeded
+- `MODEL_ERROR` (502) — AI provider error
+- `TIMEOUT` (504) — Request timeout
+- `INTERNAL_ERROR` (500) — Internal server error
 
 ---
 
@@ -216,3 +298,10 @@ avoid exposing user API keys in client-side code.
 3. **Import-pending guard (Phase 08 Critical Fix)** — The content script checks
    `importMyProfilePending` before dumping profile text, preventing automatic
    scraping on every LinkedIn profile visit.
+
+4. **Backend Proxy (Phase 09)** — All AI requests go through Cloudflare Workers
+   to support shared API mode, rate limiting, and future SaaS features.
+   Provider abstraction allows easy addition of new AI models.
+
+5. **Anonymous Client ID** — Each extension instance generates a UUID stored in
+   Chrome Storage, used for rate limiting and analytics (no PII).

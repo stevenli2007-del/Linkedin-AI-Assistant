@@ -67,7 +67,7 @@ No new decision that conflicts with these records can be made without updating t
 
 ### ADR-003: LLM Provider — DeepSeek API (Direct Call)
 
-- **Status:** Accepted (planned to be superseded by ADR-011 in Phase 09)
+- **Status:** Superseded by ADR-013
 - **Context:** The extension needs an LLM to generate personalized connection messages. Cost, quality, and simplicity are the main concerns for V1.
 - **Decision:** Call the DeepSeek API directly from the extension using an OpenAI-compatible endpoint.
 - **Alternatives Considered:**
@@ -84,7 +84,7 @@ No new decision that conflicts with these records can be made without updating t
 
 ### ADR-004: No Backend in Version 1
 
-- **Status:** Accepted (will be superseded by backend proxy in Phase 09)
+- **Status:** Superseded by ADR-013
 - **Context:** A backend server adds hosting cost, complexity, and compliance overhead. The V1 scope is a personal-use Chrome extension with local data.
 - **Decision:** The extension will not have a backend server in Version 1.
 - **Alternatives Considered:**
@@ -237,6 +237,49 @@ No new decision that conflicts with these records can be made without updating t
 
 ---
 
+### ADR-013: Backend Proxy Architecture — Cloudflare Workers
+
+- **Status:** Accepted
+- **Context:** The extension originally called the DeepSeek API directly from the client (ADR-003, ADR-004). This approach exposes API keys in client-side code, prevents rate limiting, and blocks future SaaS features like shared API mode, user accounts, and subscriptions. Phase 08 identified these as production-readiness blockers.
+- **Decision:** Introduce a backend proxy running on Cloudflare Workers. All AI requests from the extension go through the proxy. The proxy handles API key management (shared and custom modes), rate limiting (10 req/min per client), request logging, and error handling with provider-agnostic error codes.
+- **Alternatives Considered:**
+  - Continue direct API calls (ADR-003): Rejected — API keys exposed, no rate limiting, no SaaS future.
+  - Node.js + Express on VPS: Rejected — higher cost, requires server management, slower cold start.
+  - AWS Lambda: Rejected — more complex setup, less natural fit for Chrome extension use case.
+  - Vercel Edge Functions: Rejected — less control over runtime, KV storage not as integrated.
+- **Consequences:**
+  - API keys are never exposed in client-side code (shared mode key stored in Cloudflare Secrets).
+  - Rate limiting protects shared API key quota from abuse.
+  - Extension code is simplified — `llm.ts` calls one backend URL, not a provider-specific endpoint.
+  - SaaS features (user accounts, subscriptions, usage tracking) can be added incrementally in future phases.
+  - Cloudflare Workers free tier supports 100,000 requests/day — sufficient for beta testing.
+  - Adds deployment dependency — if backend is down, extension cannot generate messages (mitigated by Cloudflare 99.9%+ SLA).
+  - Supersedes ADR-003 (DeepSeek API Direct Call) and ADR-004 (No Backend in V1).
+- **Date:** 2026-06-27
+- **Review Date:** 2026-12-31
+
+---
+
+### ADR-014: Provider Abstraction Layer
+
+- **Status:** Accepted
+- **Context:** The backend must support multiple AI providers in the future (OpenAI, Claude, local models). Hardcoding DeepSeek-specific logic in route handlers would require duplicating and modifying code for each new provider, violating the Open/Closed principle and increasing maintenance cost.
+- **Decision:** Implement a Provider Abstraction Layer with `AIProvider` interface, `ProviderFactory`, and per-provider implementations. Currently only `DeepSeekProvider` is implemented. Adding a new provider requires only: (1) creating a new provider file, (2) adding a case to the factory, (3) adding default config to `config/ai.ts`. Route handlers and extension code remain unchanged.
+- **Alternatives Considered:**
+  - Hardcode DeepSeek in routes: Rejected — every new provider requires modifying route handlers.
+  - Generic OpenAI-compatible wrapper only: Rejected — Claude and local models may not follow OpenAI API format exactly.
+  - No abstraction (add later): Rejected — retrofitting abstraction after production code exists is more disruptive than building it upfront.
+- **Consequences:**
+  - New AI providers can be added with zero changes to route handlers or extension code.
+  - `config/ai.ts` centralizes all provider-specific settings (model, temperature, timeout, retry).
+  - Provider selection is backend-only — the extension never specifies which provider to use.
+  - Slightly more code in Phase 09 (interface + factory + config), but saves significant effort in Phase 10+.
+  - Provider interface must be stable — breaking changes require updating all implementations simultaneously.
+- **Date:** 2026-06-27
+- **Review Date:** 2026-12-31
+
+---
+
 ## 4. How to Add a New ADR
 
 When a new technical decision is made:
@@ -274,8 +317,8 @@ When a new technical decision is made:
 |--------|-------|--------|-------------|
 | ADR-001 | Frontend Stack | Accepted | 2026-12-31 |
 | ADR-002 | Chrome Manifest V3 | Accepted | 2027-06-26 |
-| ADR-003 | DeepSeek API Direct Call | Accepted (→ADR-011) | 2026-09-30 |
-| ADR-004 | No Backend in V1 | Accepted (→backend in Phase 09) | 2026-09-30 |
+| ADR-003 | DeepSeek API Direct Call | Superseded by ADR-013 | 2026-09-30 |
+| ADR-004 | No Backend in V1 | Superseded by ADR-013 | 2026-09-30 |
 | ADR-005 | Chrome Local Storage Only | Accepted | 2027-06-26 |
 | ADR-006 | React State Only | Accepted | 2026-12-31 |
 | ADR-007 | Four Fixed Message Styles | Accepted | 2026-12-31 |
@@ -284,5 +327,7 @@ When a new technical decision is made:
 | ADR-010 | Minimal Apple-style UI | Accepted | 2027-06-26 |
 | ADR-011 | Exponential Backoff Retry | Accepted | 2026-12-31 |
 | ADR-012 | Content Security Policy | Accepted | 2027-06-26 |
+| ADR-013 | Backend Proxy Architecture | Accepted | 2026-12-31 |
+| ADR-014 | Provider Abstraction Layer | Accepted | 2026-12-31 |
 
 ---

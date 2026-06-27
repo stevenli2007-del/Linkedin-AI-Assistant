@@ -42,12 +42,11 @@
 
 ## Backend
 
-- No backend in Version 1
-- The extension directly calls the DeepSeek API.
-
-Future Version:
-- Node.js
-- Express
+- Cloudflare Workers (serverless runtime)
+- Hono (lightweight web framework)
+- Cloudflare KV (rate limiting storage)
+- Wrangler (CLI & dev tool)
+- TypeScript
 
 ---
 

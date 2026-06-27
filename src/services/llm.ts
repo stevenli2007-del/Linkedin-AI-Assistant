@@ -1,30 +1,44 @@
-// LLM Service — wraps the DeepSeek Chat Completions API
-// DeepSeek is OpenAI-compatible, so we use the standard chat/completions format.
+// LLM Service — calls Backend Proxy API (Cloudflare Workers)
+// Phase 09: Extension no longer calls DeepSeek directly.
+// All AI requests go through backend to support shared/custom API modes.
 
 import type { GeneratedMessage, MessageStyle, PromptPayload, UserProfile } from "@/types";
 import { buildProfileRefinePrompt } from "./prompt";
+import { loadClientId, saveClientId } from "./client-id";
 
-const DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1";
-const DEFAULT_MODEL = "deepseek-chat";
-const DEFAULT_TEMPERATURE = 0.7;
-const DEFAULT_MAX_TOKENS = 1024;
-const FETCH_TIMEOUT_MS = 30_000; // 30 second timeout for all API calls
+const BACKEND_URL = "https://linkedin-ai-backend.stevenli2007.workers.dev";
+const EXTENSION_VERSION = "1.0.0";
+const FETCH_TIMEOUT_MS = 30_000;
 
-// Retry configuration (ReviewChecklist 2.9: retry with backoff, no infinite loops)
+// Retry configuration
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 1000;
 
-interface DeepSeekMessage {
+interface BackendMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }
 
-interface DeepSeekResponse {
-  choices: Array<{
-    message: {
-      content: string;
+interface BackendGenerateRequest {
+  messages: BackendMessage[];
+  temperature?: number;
+  maxTokens?: number;
+}
+
+interface BackendGenerateResponse {
+  success: boolean;
+  data?: {
+    message: string;
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
     };
-  }>;
+  };
+  error?: string;
+  errorCode?: string;
+  requestId: string;
+  timestamp: string;
 }
 
 interface ParsedResponse {
@@ -36,6 +50,14 @@ interface ParsedResponse {
 
 function generateId(): string {
   return `msg_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function generateRequestId(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 function validateMessages(messages: unknown[]): boolean {
@@ -59,7 +81,6 @@ function validateMessages(messages: unknown[]): boolean {
 }
 
 function parseResponse(rawContent: string): ParsedResponse {
-  // DeepSeek may wrap JSON in markdown code fences
   let jsonString = rawContent.trim();
 
   const codeFenceMatch = jsonString.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
@@ -109,15 +130,7 @@ function parseResponse(rawContent: string): ParsedResponse {
   }
 }
 
-// ── Shared API call helper with retry + backoff ────────────────────────────
-//
-// Phase 08 (H-3, H-4, L-1): Previously generateMessages() and refineProfile()
-// each had their own copy of ~60 lines of fetch + error-handling logic, and
-// neither retried on 429/5xx. This shared helper provides:
-//   • Exponential backoff retry for 429, 500, 502, 503, timeouts, network errors
-//   • Immediate throw (no retry) for 401, 402, and other 4xx client errors
-//   • Consistent user-friendly error messages across all call sites
-//   • Max 3 retries with 1s → 2s → 4s delays (no infinite loops)
+// ── Shared API call helper with retry + backoff ──────────────────────────────
 
 function isRetriableStatus(status: number): boolean {
   return status === 429 || status === 500 || status === 502 || status === 503;
@@ -128,58 +141,109 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Calls the DeepSeek chat/completions endpoint with exponential backoff retry
- * for retriable errors (429, 500, 502, 503, timeouts, network errors).
+ * Calls the Backend Proxy API with exponential backoff retry.
  *
- * Non-retriable errors (401, 402, other 4xx) throw immediately with a
- * user-friendly message.
- *
+ * @param apiMode - "shared" (use backend's API key) or "custom" (use user's API key)
+ * @param customApiKey - User's own API key (required when apiMode is "custom")
+ * @param messages - The messages to send to the AI
+ * @param temperature - Optional temperature parameter
+ * @param maxTokens - Optional max tokens parameter
+ * @param timeoutErrorMessage - Error message for timeout errors
  * @returns The raw content string from the API response.
  */
-async function callDeepSeekAPI(
-  apiKey: string,
-  body: string,
+async function callBackendAPI(
+  apiMode: "shared" | "custom",
+  customApiKey: string | null,
+  messages: BackendMessage[],
+  temperature: number,
+  maxTokens: number,
   timeoutErrorMessage: string
 ): Promise<string> {
+  // Get or create client ID (persisted in chrome.storage.local)
+  const clientId = await loadClientId();
+
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
+    const requestId = generateRequestId();
+
     try {
-      const response = await fetch(`${DEEPSEEK_BASE_URL}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body,
-        signal: controller.signal,
-      });
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "X-Request-Id": requestId,
+        "X-Client-Id": clientId,
+        "X-Extension-Version": EXTENSION_VERSION,
+        "X-Api-Mode": apiMode,
+      };
+
+      // In custom mode, send user's API key to backend (backend uses it for this request only)
+      if (apiMode === "custom" && customApiKey) {
+        headers["X-Custom-Api-Key"] = customApiKey;
+      }
+
+      const body: BackendGenerateRequest = { messages };
+      if (temperature !== undefined) body.temperature = temperature;
+      if (maxTokens !== undefined) body.maxTokens = maxTokens;
+
+      const response = await fetch(
+        `${BACKEND_URL}/api/v1/generate`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        }
+      );
 
       if (response.ok) {
-        let data: DeepSeekResponse;
+        let data: BackendGenerateResponse;
         try {
-          data = (await response.json()) as DeepSeekResponse;
+          data = (await response.json()) as BackendGenerateResponse;
         } catch {
-          throw new Error("Failed to read DeepSeek API response.");
+          throw new Error("Failed to read backend API response.");
         }
 
-        if (!data.choices || data.choices.length === 0) {
-          throw new Error("DeepSeek API returned an empty response. Please try again.");
+        if (!data.success) {
+          // 使用后端返回的错误码显示更友好的提示
+          const errorCode = data.errorCode;
+          if (errorCode === 'RATE_LIMITED') {
+            throw new Error("请求过于频繁，请稍后再试（每分钟最多 10 次）。");
+          }
+          if (errorCode === 'UNAUTHORIZED') {
+            throw new Error("API Key 无效，请检查 Settings 中的配置。");
+          }
+          if (errorCode === 'MODEL_ERROR') {
+            throw new Error("AI 服务暂时不可用，请稍后重试。");
+          }
+          throw new Error(data.error || "Backend API returned an error.");
         }
 
-        const rawContent = data.choices[0]?.message?.content;
-        if (!rawContent) {
-          throw new Error("DeepSeek API returned a response with no content.");
+        if (!data.data || !data.data.message) {
+          throw new Error("Backend API returned an empty response. Please try again.");
         }
 
-        return rawContent;
+        return data.data.message;
       }
 
       const status = response.status;
 
+      // 尝试读取后端返回的错误码
+      let errorCode: string | undefined;
+      let errorMsg: string | undefined;
+      try {
+        const errorBody = await response.json();
+        errorCode = errorBody.errorCode;
+        errorMsg = errorBody.error;
+      } catch {
+        // 无法解析错误响应，使用默认处理
+      }
+
       // Non-retriable client errors — throw immediately
       if (status === 401) {
+        if (errorCode === 'UNAUTHORIZED') {
+          throw new Error("API Key 无效，请检查 Settings 中的配置。");
+        }
         throw new Error("Invalid API Key. Please check your DeepSeek API Key and try again.");
       }
       if (status === 402) {
@@ -192,16 +256,16 @@ async function callDeepSeekAPI(
           await sleep(INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt));
           continue;
         }
-        if (status === 429) {
-          throw new Error("Too many requests. Please wait a moment and try again.");
+        if (status === 429 || errorCode === 'RATE_LIMITED') {
+          throw new Error("请求过于频繁，请稍后再试（每分钟最多 10 次）。");
         }
-        throw new Error("DeepSeek server error. Please try again in a moment.");
+        throw new Error("Backend server error. Please try again in a moment.");
       }
 
       // Other non-retriable errors
       let errorBody = "";
       try { errorBody = await response.text(); } catch { /* ignore */ }
-      throw new Error(`DeepSeek API error (HTTP ${status}): ${errorBody.slice(0, 200)}`);
+      throw new Error(`Backend API error (HTTP ${status}): ${errorBody.slice(0, 200)}`);
     } catch (err) {
       // Re-throw user-friendly errors (our own Error instances, not DOMException)
       if (err instanceof Error && !(err instanceof DOMException)) {
@@ -224,7 +288,7 @@ async function callDeepSeekAPI(
       }
 
       throw new Error(
-        "Network error: Unable to reach DeepSeek API. Please check your internet connection."
+        "Network error: Unable to reach backend API. Please check your internet connection."
       );
     } finally {
       window.clearTimeout(timeoutId);
@@ -235,10 +299,11 @@ async function callDeepSeekAPI(
   throw new Error("Unexpected error: API request failed after all retries.");
 }
 
-// ── Public API ─────────────────────────────────────────────────────────────
+// ── Public API ────────────────────────────────────────────────────────────────
 
 export async function generateMessages(
-  apiKey: string,
+  apiMode: "shared" | "custom",
+  customApiKey: string | null,
   prompt: PromptPayload,
   options?: {
     model?: string;
@@ -246,19 +311,20 @@ export async function generateMessages(
     maxTokens?: number;
   }
 ): Promise<GeneratedMessage[]> {
-  const model = options?.model ?? DEFAULT_MODEL;
-  const temperature = options?.temperature ?? DEFAULT_TEMPERATURE;
-  const maxTokens = options?.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const temperature = options?.temperature ?? 0.7;
+  const maxTokens = options?.maxTokens ?? 1024;
 
-  const messages: DeepSeekMessage[] = [
+  const messages: BackendMessage[] = [
     { role: "system", content: prompt.systemPrompt },
     { role: "user", content: prompt.userPrompt },
   ];
 
-  const body = JSON.stringify({ model, messages, temperature, max_tokens: maxTokens });
-  const rawContent = await callDeepSeekAPI(
-    apiKey,
-    body,
+  const rawContent = await callBackendAPI(
+    apiMode,
+    customApiKey,
+    messages,
+    temperature,
+    maxTokens,
     "Request timed out after 30 seconds. Please check your connection and try again."
   );
 
@@ -274,7 +340,8 @@ export async function generateMessages(
 }
 
 export async function regenerateMessage(
-  apiKey: string,
+  apiMode: "shared" | "custom",
+  customApiKey: string | null,
   prompt: PromptPayload,
   style: MessageStyle,
   options?: {
@@ -283,7 +350,7 @@ export async function regenerateMessage(
     maxTokens?: number;
   }
 ): Promise<GeneratedMessage> {
-  const generated = await generateMessages(apiKey, prompt, options);
+  const generated = await generateMessages(apiMode, customApiKey, prompt, options);
   const match = generated.find((msg) => msg.messageStyle === style);
 
   if (!match) {
@@ -300,33 +367,84 @@ export async function regenerateMessage(
 }
 
 /**
- * Phase 7: Send raw LinkedIn profile text to DeepSeek for refinement.
+ * Phase 7: Send raw LinkedIn profile text to Backend API for refinement.
  * The LLM parses the messy scraped text into a clean, structured UserProfile.
  */
 export async function refineProfile(
-  apiKey: string,
+  apiMode: "shared" | "custom",
+  customApiKey: string | null,
   rawText: string,
   options?: {
     model?: string;
     temperature?: number;
   }
 ): Promise<UserProfile> {
-  const model = options?.model ?? DEFAULT_MODEL;
   const temperature = options?.temperature ?? 0.3; // Lower temp for structured extraction
 
   const prompt = buildProfileRefinePrompt(rawText);
 
-  const messages: DeepSeekMessage[] = [
+  const messages: BackendMessage[] = [
     { role: "system", content: prompt.systemPrompt },
     { role: "user", content: prompt.userPrompt },
   ];
 
-  const body = JSON.stringify({ model, messages, temperature, max_tokens: 1024 });
-  const rawContent = await callDeepSeekAPI(
-    apiKey,
-    body,
-    "Profile refinement timed out after 30 seconds. Please try again."
-  );
+  // Call backend /api/v1/refine-profile endpoint
+  const clientId = await loadClientId();
+  const requestId = generateRequestId();
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-Request-Id": requestId,
+    "X-Client-Id": clientId,
+    "X-Extension-Version": EXTENSION_VERSION,
+    "X-Api-Mode": apiMode,
+  };
+
+  if (apiMode === "custom" && customApiKey) {
+    headers["X-Custom-Api-Key"] = customApiKey;
+  }
+
+  const body = JSON.stringify({
+    rawProfileText: rawText,
+    instruction: prompt.userPrompt,
+  });
+
+  let rawContent: string;
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/v1/refine-profile`, {
+      method: "POST",
+      headers,
+      body,
+    });
+
+    if (!response.ok) {
+      let errorBody = "";
+      try { errorBody = await response.text(); } catch { /* ignore */ }
+      throw new Error(`Backend API error (HTTP ${response.status}): ${errorBody.slice(0, 200)}`);
+    }
+
+    const data = (await response.json()) as {
+      success: boolean;
+      data?: { refinedProfile: string };
+      error?: string;
+    };
+
+    if (!data.success) {
+      throw new Error(data.error || "Failed to refine profile.");
+    }
+
+    if (!data.data || !data.data.refinedProfile) {
+      throw new Error("Backend returned an empty refined profile.");
+    }
+
+    rawContent = data.data.refinedProfile;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error("Network error: Unable to reach backend API.");
+  }
 
   // Parse the JSON response (may be wrapped in code fences)
   let jsonString = rawContent.trim();

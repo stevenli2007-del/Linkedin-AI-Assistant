@@ -30,6 +30,7 @@ const DEFAULT_SETTINGS: AppSettings = {
     userInterests: "",
   },
   apiKey: "",
+  apiMode: "shared",
   model: "deepseek-chat",
   temperature: 0.7,
 };
@@ -110,8 +111,9 @@ function App() {
   };
 
   const handleGenerate = async () => {
-    if (!settings.apiKey.trim()) {
-      setError("Please enter your DeepSeek API Key in Settings first.");
+    // Phase 09: In shared mode, no API key needed
+    if (settings.apiMode === "custom" && !settings.apiKey.trim()) {
+      setError("Please enter your DeepSeek API Key in Settings first (Custom Mode).");
       return;
     }
     if (!settings.userProfile.userName.trim()) {
@@ -143,10 +145,15 @@ function App() {
       setTargetProfile(profile);
 
       const prompt = buildPrompt(settings.userProfile, profile);
-      const generated = await generateMessages(settings.apiKey.trim(), prompt, {
-        model: settings.model,
-        temperature: settings.temperature,
-      });
+      const generated = await generateMessages(
+        settings.apiMode,
+        settings.apiMode === "custom" ? settings.apiKey.trim() : null,
+        prompt,
+        {
+          model: settings.model,
+          temperature: settings.temperature,
+        }
+      );
       setMessages(generated);
     } catch (err) {
       let message =
@@ -207,8 +214,9 @@ function App() {
   };
 
   const handleRegenerate = async (style: MessageStyle) => {
-    if (!settings.apiKey.trim()) {
-      setError("Please enter your DeepSeek API Key in Settings first.");
+    // Phase 09: In shared mode, no API key needed
+    if (settings.apiMode === "custom" && !settings.apiKey.trim()) {
+      setError("Please enter your DeepSeek API Key in Settings first (Custom Mode).");
       return;
     }
     if (!targetProfile) {
@@ -226,7 +234,8 @@ function App() {
         style
       );
       const regenerated = await regenerateMessage(
-        settings.apiKey.trim(),
+        settings.apiMode,
+        settings.apiMode === "custom" ? settings.apiKey.trim() : null,
         prompt,
         style,
         {
@@ -305,22 +314,24 @@ function App() {
         </button>
       </div>
 
-      {/* Onboarding Guide — shown until both API key and profile name are set */}
+      {/* Onboarding Guide — shown until profile name is set and (shared mode or custom mode with API key) */}
       {!settingsLoaded ? (
         <div className="mb-4 p-3 rounded-apple bg-gray-50 text-xs text-gray-500">
           Loading settings...
         </div>
-      ) : (!settings.apiKey.trim() || !settings.userProfile.userName.trim()) ? (
+      ) : (!settings.userProfile.userName.trim() || (settings.apiMode === "custom" && !settings.apiKey.trim())) ? (
         <div className="mb-4 p-4 rounded-apple bg-gray-50 border border-gray-200">
           <h3 className="text-xs font-semibold text-gray-900 mb-3">Get Started in 3 Steps</h3>
           <ol className="space-y-2.5">
             <li className="flex items-start gap-2">
-              <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold mt-0.5 shrink-0 ${settings.apiKey.trim() ? "bg-green-500 text-white" : "bg-gray-300 text-white"}`}>
-                {settings.apiKey.trim() ? "\u2713" : "1"}
+              <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold mt-0.5 shrink-0 ${(settings.apiMode === "shared" || settings.apiKey.trim()) ? "bg-green-500 text-white" : "bg-gray-300 text-white"}`}>
+                {(settings.apiMode === "shared" || settings.apiKey.trim()) ? "\u2713" : "1"}
               </span>
               <div>
-                <p className="text-xs text-gray-700">Add your DeepSeek API Key</p>
-                {!settings.apiKey.trim() && (
+                <p className="text-xs text-gray-700">
+                  {settings.apiMode === "shared" ? "API Mode: Shared (ready to use)" : "Add your DeepSeek API Key"}
+                </p>
+                {settings.apiMode === "custom" && !settings.apiKey.trim() && (
                   <button onClick={() => setShowSettings(true)} className="text-[10px] text-brand-600 hover:underline mt-0.5">
                     Go to Settings →
                   </button>
@@ -333,7 +344,7 @@ function App() {
               </span>
               <div>
                 <p className="text-xs text-gray-700">Fill in your profile</p>
-                {settings.apiKey.trim() && !settings.userProfile.userName.trim() && (
+                {!settings.userProfile.userName.trim() && (
                   <button onClick={() => setShowSettings(true)} className="text-[10px] text-brand-600 hover:underline mt-0.5">
                     Go to Settings →
                   </button>
@@ -353,7 +364,7 @@ function App() {
       {/* Generate Button */}
       <button
         onClick={handleGenerate}
-        disabled={isLoading || regeneratingStyles.size > 0 || !settingsLoaded || !settings.apiKey.trim()}
+        disabled={isLoading || regeneratingStyles.size > 0 || !settingsLoaded || (settings.apiMode === "custom" && !settings.apiKey.trim())}
         className="w-full py-2.5 rounded-apple bg-brand-600 text-white font-medium text-sm
                    hover:bg-brand-700 active:scale-[0.98] transition-all
                    disabled:opacity-50 disabled:cursor-not-allowed"

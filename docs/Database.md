@@ -39,6 +39,7 @@ No backend database in V1.
 | ------------- | ---------- | ---------------------------------------- |
 | userProfile   | UserProfile| User's own profile                       |
 | apiKey        | string     | DeepSeek API key (sk-...)                |
+| apiMode       | string     | API mode: "shared" or "custom" (default: "shared") |
 | model         | string     | Model name (default: "deepseek-chat")    |
 | temperature   | number     | LLM temperature 0–2 (default: 0.7)       |
 
@@ -71,7 +72,8 @@ type MessageStyle = "professional" | "friendly" | "entrepreneur" | "academic";
 
 | Key                       | Type                       | Description                                     |
 | ------------------------- | -------------------------- | ----------------------------------------------- |
-| `appSettings`             | AppSettings                | User profile, API key, model, temperature       |
+| `appSettings`             | AppSettings                | User profile, API key, apiMode, model, temperature |
+| `clientId`                | string                     | Anonymous Client ID (UUID v4, generated on first install) |
 | `importMyProfilePending`  | ImportPendingState \| null | Auto-import flag (60s TTL)                      |
 | `pendingRawProfileText`   | string                     | Raw LinkedIn text awaiting AI refinement        |
 

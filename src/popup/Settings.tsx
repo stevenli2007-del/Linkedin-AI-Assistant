@@ -10,12 +10,16 @@ import { refineProfile } from "@/services/llm";
 
 const FAQ_ITEMS: Array<{ q: string; a: string }> = [
   {
+    q: "What is API Mode?",
+    a: "Shared Mode (recommended) uses Youcheng's API key — no setup needed. Custom Mode lets you use your own DeepSeek API key.",
+  },
+  {
     q: "How do I get a DeepSeek API Key?",
-    a: "Visit platform.deepseek.com, sign up, and generate an API key. It starts with \"sk-\".",
+    a: "Only needed for Custom Mode. Visit platform.deepseek.com, sign up, and generate an API key. It starts with \"sk-\".",
   },
   {
     q: "Is my data safe?",
-    a: "Your API key and profile are stored locally in Chrome. No analytics, no tracking. See Privacy Policy for details.",
+    a: "Your settings and profile are stored locally in Chrome. In Custom Mode, your API key is sent only to our backend (not stored). See Privacy Policy.",
   },
   {
     q: "Why do I need to fill in my profile?",
@@ -89,6 +93,9 @@ export function Settings({ settings, onSave, onCancel }: SettingsProps) {
   const [importStatus, setImportStatus] = useState<"idle" | "importing" | "refining" | "preview">("idle");
   const [previewProfile, setPreviewProfile] = useState<UserProfile | null>(null);
 
+  // Phase 09: Load API mode from settings
+  const [apiMode, setApiMode] = useState<"shared" | "custom">(settings.apiMode || "shared");
+
   useEffect(() => {
     setDraft(settings);
   }, [settings]);
@@ -101,9 +108,9 @@ export function Settings({ settings, onSave, onCancel }: SettingsProps) {
       const rawText = await loadPendingRawText();
       if (!mounted || !rawText) return;
 
-      // If no API key, show error — can't refine without it
-      if (!draft.apiKey.trim()) {
-        setError("Please set your DeepSeek API Key first to refine your profile with AI.");
+      // Phase 09: Check API mode — shared mode doesn't need user API key
+      if (draft.apiMode === "custom" && !draft.apiKey.trim()) {
+        setError("Please set your DeepSeek API Key first (Custom Mode).");
         setImportStatus("idle");
         await clearPendingRawText();
         return;
@@ -113,9 +120,12 @@ export function Settings({ settings, onSave, onCancel }: SettingsProps) {
       setError("");
 
       try {
-        const refined = await refineProfile(draft.apiKey.trim(), rawText, {
-          model: draft.model,
-        });
+        const refined = await refineProfile(
+          draft.apiMode,
+          draft.apiMode === "custom" ? draft.apiKey.trim() : null,
+          rawText,
+          { model: draft.model }
+        );
         if (mounted) {
           setPreviewProfile(refined);
           setImportStatus("preview");
@@ -202,9 +212,16 @@ export function Settings({ settings, onSave, onCancel }: SettingsProps) {
       setError("Please enter your name.");
       return;
     }
-    if (draft.apiKey.trim() && !draft.apiKey.trim().startsWith("sk-")) {
-      setError("API Key should start with 'sk-'.");
-      return;
+    // Only validate API key if in custom mode
+    if (draft.apiMode === "custom") {
+      if (!draft.apiKey.trim()) {
+        setError("Please enter your DeepSeek API Key (Custom Mode).");
+        return;
+      }
+      if (!draft.apiKey.trim().startsWith("sk-")) {
+        setError("API Key should start with 'sk-'.");
+        return;
+      }
     }
 
     setSaving(true);
@@ -362,10 +379,60 @@ export function Settings({ settings, onSave, onCancel }: SettingsProps) {
         </button>
       </section>
 
-      {/* API Key */}
+      {/* API Mode */}
       <section className="mb-5">
+        <h2 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">
+          API Mode
+        </h2>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="apiMode"
+              checked={apiMode === "shared"}
+              onChange={() => {
+                setApiMode("shared");
+                setDraft((prev) => ({ ...prev, apiMode: "shared" }));
+              }}
+              className="accent-brand-600"
+            />
+            <div>
+              <p className="text-xs font-medium text-gray-900">
+                Use Youcheng's API (Recommended)
+              </p>
+              <p className="text-[10px] text-gray-500">
+                No API key needed. Ready to use immediately.
+              </p>
+            </div>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="apiMode"
+              checked={apiMode === "custom"}
+              onChange={() => {
+                setApiMode("custom");
+                setDraft((prev) => ({ ...prev, apiMode: "custom" }));
+              }}
+              className="accent-brand-600"
+            />
+            <div>
+              <p className="text-xs font-medium text-gray-900">
+                Use my own API key
+              </p>
+              <p className="text-[10px] text-gray-500">
+                Use your own DeepSeek API key. You pay for usage.
+              </p>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      {/* API Key */}
+      <section className={`mb-5 ${apiMode === "shared" ? "opacity-50" : ""}`}>
         <label className="block text-xs font-medium text-gray-600 mb-1.5">
           DeepSeek API Key
+          {apiMode === "custom" && <span className="text-red-500 ml-0.5">*</span>}
         </label>
         <div className="relative">
           <input
@@ -373,9 +440,10 @@ export function Settings({ settings, onSave, onCancel }: SettingsProps) {
             value={draft.apiKey}
             onChange={(e) => setDraft((prev) => ({ ...prev, apiKey: e.target.value }))}
             placeholder="sk-..."
-            className="w-full px-3 py-2 pr-16 text-xs border border-gray-300 rounded-apple
+            disabled={apiMode === "shared"}
+            className={`w-full px-3 py-2 pr-16 text-xs border border-gray-300 rounded-apple
                        focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500
-                       placeholder-gray-400"
+                       placeholder-gray-400 ${apiMode === "shared" ? "bg-gray-100 cursor-not-allowed" : ""}`}
           />
           <button
             type="button"

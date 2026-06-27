@@ -35,7 +35,7 @@
   "permissions": ["storage", "activeTab"],
   "host_permissions": [
     "https://www.linkedin.com/*",
-    "https://api.deepseek.com/*"
+    "https://linkedin-ai-backend.stevenli2007.workers.dev/*"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"

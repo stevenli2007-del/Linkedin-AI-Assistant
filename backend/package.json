@@ -1,0 +1,23 @@
+{
+  "name": "linkedin-ai-backend",
+  "version": "1.0.0",
+  "description": "Backend proxy for LinkedIn AI Networking Assistant",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "jest",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": ["cloudflare", "workers", "ai", "linkedin"],
+  "author": "Steven Li",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20230618.0",
+    "typescript": "^5.1.6",
+    "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "zod": "^3.21.4"
+  }
+}
