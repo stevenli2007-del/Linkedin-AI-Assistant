@@ -1,0 +1,205 @@
+import type { TargetProfile, UserProfile } from "@/types";
+
+export interface AppSettings {
+  userProfile: UserProfile;
+  apiKey: string;
+  model: string;
+  temperature: number;
+}
+
+const DEFAULT_SETTINGS: AppSettings = {
+  userProfile: {
+    userName: "",
+    userHeadline: "",
+    userSchool: "",
+    userCompany: "",
+    userBackground: "",
+    userGoals: "",
+    userInterests: "",
+  },
+  apiKey: "",
+  model: "deepseek-chat",
+  temperature: 0.7,
+};
+
+const STORAGE_KEY = "appSettings";
+
+export async function loadSettings(): Promise<AppSettings> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([STORAGE_KEY], (result) => {
+      const stored = result[STORAGE_KEY] as Partial<AppSettings> | undefined;
+      resolve(mergeSettings(stored));
+    });
+  });
+}
+
+export async function saveSettings(
+  partial: Partial<AppSettings>
+): Promise<void> {
+  const current = await loadSettings();
+  const next: AppSettings = {
+    ...current,
+    ...partial,
+    userProfile: {
+      ...current.userProfile,
+      ...(partial.userProfile ?? {}),
+    },
+  };
+
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ [STORAGE_KEY]: next }, () => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+function mergeSettings(stored: Partial<AppSettings> | undefined): AppSettings {
+  if (!stored || typeof stored !== "object") {
+    return DEFAULT_SETTINGS;
+  }
+
+  return {
+    userProfile: {
+      ...DEFAULT_SETTINGS.userProfile,
+      ...(stored.userProfile ?? {}),
+    },
+    apiKey: typeof stored.apiKey === "string" ? stored.apiKey : DEFAULT_SETTINGS.apiKey,
+    model: typeof stored.model === "string" ? stored.model : DEFAULT_SETTINGS.model,
+    temperature:
+      typeof stored.temperature === "number"
+        ? clampTemperature(stored.temperature)
+        : DEFAULT_SETTINGS.temperature,
+  };
+}
+
+function clampTemperature(value: number): number {
+  if (Number.isNaN(value)) return DEFAULT_SETTINGS.temperature;
+  return Math.min(2, Math.max(0, value));
+}
+
+const IMPORT_PENDING_KEY = "importMyProfilePending";
+const PENDING_USER_PROFILE_KEY = "pendingUserProfile";
+const IMPORT_EXPIRATION_MS = 60_000;
+
+interface ImportPendingState {
+  pending: true;
+  startedAt: number;
+}
+
+export async function setImportPending(pending: boolean): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const value: ImportPendingState | null = pending
+      ? { pending: true, startedAt: Date.now() }
+      : null;
+    chrome.storage.local.set({ [IMPORT_PENDING_KEY]: value }, () => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+export async function isImportPending(): Promise<boolean> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([IMPORT_PENDING_KEY], (result) => {
+      const value = result[IMPORT_PENDING_KEY] as
+        | ImportPendingState
+        | null
+        | undefined;
+      if (!value || !value.pending || !value.startedAt) {
+        resolve(false);
+        return;
+      }
+      const elapsed = Date.now() - value.startedAt;
+      resolve(elapsed <= IMPORT_EXPIRATION_MS);
+    });
+  });
+}
+
+export async function clearImportPending(): Promise<void> {
+  return new Promise((resolve) => {
+    chrome.storage.local.remove(IMPORT_PENDING_KEY, () => {
+      resolve();
+    });
+  });
+}
+
+export function mapTargetProfileToUserProfile(
+  target: TargetProfile
+): Partial<UserProfile> {
+  const result: Partial<UserProfile> = {};
+
+  if (target.targetName) result.userName = target.targetName;
+  if (target.targetHeadline) result.userHeadline = target.targetHeadline;
+  if (target.targetCompany) result.userCompany = target.targetCompany;
+  if (target.targetSchool) result.userSchool = target.targetSchool;
+
+  const backgroundParts: string[] = [];
+  if (target.targetAbout) backgroundParts.push(target.targetAbout);
+  if (target.targetExperience) backgroundParts.push(target.targetExperience);
+  if (backgroundParts.length > 0) {
+    result.userBackground = backgroundParts.join("\n\n");
+  }
+
+  return result;
+}
+
+export async function savePendingUserProfile(
+  target: TargetProfile
+): Promise<void> {
+  const mapped = mapTargetProfileToUserProfile(target);
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ [PENDING_USER_PROFILE_KEY]: mapped }, () => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+export async function loadPendingUserProfile(): Promise<Partial<UserProfile> | null> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([PENDING_USER_PROFILE_KEY], (result) => {
+      const value = result[PENDING_USER_PROFILE_KEY] as
+        | Partial<UserProfile>
+        | undefined;
+      resolve(value && typeof value === "object" ? value : null);
+    });
+  });
+}
+
+export async function clearPendingUserProfile(): Promise<void> {
+  return new Promise((resolve) => {
+    chrome.storage.local.remove(PENDING_USER_PROFILE_KEY, () => {
+      resolve();
+    });
+  });
+}
+
+// Phase 7: Raw profile text (dumped from LinkedIn page, to be refined by LLM)
+const PENDING_RAW_TEXT_KEY = "pendingRawProfileText";
+
+export async function loadPendingRawText(): Promise<string | null> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([PENDING_RAW_TEXT_KEY], (result) => {
+      const value = result[PENDING_RAW_TEXT_KEY] as string | undefined;
+      resolve(value && typeof value === "string" && value.length > 0 ? value : null);
+    });
+  });
+}
+
+export async function clearPendingRawText(): Promise<void> {
+  return new Promise((resolve) => {
+    chrome.storage.local.remove(PENDING_RAW_TEXT_KEY, () => {
+      resolve();
+    });
+  });
+}

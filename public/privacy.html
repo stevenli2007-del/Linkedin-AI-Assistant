@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — LinkedIn AI Networking Assistant</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #fafafa;
+      color: #1a1a1a;
+      line-height: 1.7;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 48px 56px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #111;
+    }
+    .updated {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 32px;
+    }
+    h2 {
+      font-size: 19px;
+      font-weight: 600;
+      margin-top: 36px;
+      margin-bottom: 12px;
+      color: #222;
+    }
+    h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: #333;
+    }
+    p { margin-bottom: 12px; font-size: 15px; color: #333; }
+    ul { margin: 8px 0 16px 20px; }
+    li { margin-bottom: 6px; font-size: 15px; color: #333; }
+    .callout {
+      background: #f5f3ff;
+      border-left: 3px solid #7c3aed;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 15px;
+    }
+    .callout-green {
+      background: #f0fdf4;
+      border-left: 3px solid #16a34a;
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-size: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 20px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+    th {
+      font-weight: 600;
+      color: #555;
+      background: #f9fafb;
+    }
+    td code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #7c3aed;
+    }
+    .footer {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid #eee;
+      font-size: 13px;
+      color: #999;
+    }
+    strong { color: #111; }
+    code { font-family: "SF Mono", Monaco, Consolas, monospace; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p class="updated">LinkedIn AI Networking Assistant &middot; Last updated: June 27, 2026</p>
+
+    <div class="callout">
+      <strong>Your data stays on your device.</strong> In the current version, the Extension does not have a backend server. All data is stored locally in your browser using Chrome's built-in local storage. No data is uploaded to any server controlled by the Extension developer.
+    </div>
+
+    <h2>Overview</h2>
+    <p>LinkedIn AI Networking Assistant ("the Extension") is a Chrome browser extension that helps you generate personalized LinkedIn connection request messages using AI. This privacy policy explains what data the Extension processes, how it is stored, and how it is used.</p>
+
+    <h2>Browser Permissions</h2>
+    <p>The Extension requests only the minimum permissions required to function:</p>
+    <table>
+      <thead>
+        <tr><th>Permission</th><th>Why it's needed</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>storage</code></td><td>Used to store your profile, API key, and preferences locally in your browser.</td></tr>
+        <tr><td><code>activeTab</code></td><td>Used to read the currently open LinkedIn profile page after you explicitly click "Generate Messages."</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Host permissions</strong> are limited to:</p>
+    <ul>
+      <li><code>https://www.linkedin.com/*</code> &mdash; so the content script can read the LinkedIn profile you are viewing.</li>
+      <li><code>https://api.deepseek.com/*</code> &mdash; so the Extension can call the DeepSeek API for message generation.</li>
+    </ul>
+    <p>The Extension does <strong>NOT</strong> request: <code>tabs</code>, <code>cookies</code>, <code>webRequest</code>, <code>history</code>, <code>bookmarks</code>, <code>management</code>, or any other broad permission.</p>
+
+    <div class="callout-green">
+      <strong>You remain in full control at all times.</strong> The Extension never sends connection requests, clicks LinkedIn buttons, posts messages, modifies your account, or operates automatically. Every AI-generated message must be reviewed and manually sent by you.
+    </div>
+
+    <h2>User Control</h2>
+    <p>You remain in full control at all times. The Extension <strong>never</strong>:</p>
+    <ul>
+      <li>Sends connection requests on your behalf</li>
+      <li>Clicks LinkedIn buttons or UI elements</li>
+      <li>Posts messages or content to LinkedIn</li>
+      <li>Modifies your LinkedIn account or profile</li>
+      <li>Operates automatically without your explicit action</li>
+    </ul>
+    <p>Every AI-generated message must be reviewed and manually sent by you. The Extension is a drafting tool &mdash; it helps you write, but you decide what to send.</p>
+
+    <h2>Data We Collect and Store</h2>
+
+    <h3>1. Your Profile Information</h3>
+    <ul>
+      <li><strong>What:</strong> Your name, headline, company, school, professional background, networking goals, and interests.</li>
+      <li><strong>How collected:</strong> You can manually enter this in Settings, or use "Sync My LinkedIn Profile" which reads your own LinkedIn profile page text and uses AI to extract structured information.</li>
+      <li><strong>Where stored:</strong> Chrome local storage on your device.</li>
+      <li><strong>Purpose:</strong> Used as context for generating personalized connection messages.</li>
+    </ul>
+
+    <h3>2. Target Profile Information</h3>
+    <ul>
+      <li><strong>What:</strong> The name, headline, company, school, location, about, and experience of the LinkedIn profile you are viewing.</li>
+      <li><strong>How collected:</strong> When you click "Generate Messages," the Extension reads the visible text of the LinkedIn profile page open in your browser. The Extension only accesses information that is already visible in your browser at the time you request message generation.</li>
+      <li><strong>Where stored:</strong> Temporarily in browser memory only. NOT persisted to local storage. Discarded after messages are generated.</li>
+      <li><strong>Purpose:</strong> Used as context for generating personalized connection messages.</li>
+    </ul>
+
+    <h3>3. DeepSeek API Key</h3>
+    <ul>
+      <li><strong>What:</strong> Your DeepSeek API key (starts with <code>sk-</code>).</li>
+      <li><strong>How collected:</strong> You enter it manually in Settings.</li>
+      <li><strong>Where stored:</strong> Chrome local storage on your device.</li>
+      <li><strong>Purpose:</strong> Used to authenticate requests required for AI message generation and profile refinement.</li>
+      <li><strong>Security:</strong> Your API key is used only to authenticate requests required for AI message generation. It is never shared with the developer or stored on developer-controlled servers.</li>
+    </ul>
+
+    <h3>4. Extension Settings</h3>
+    <ul>
+      <li><strong>What:</strong> Your preferred AI model name and temperature setting.</li>
+      <li><strong>Where stored:</strong> Chrome local storage on your device.</li>
+      <li><strong>Purpose:</strong> Used to configure AI message generation behavior.</li>
+    </ul>
+
+    <h2>Data We Do NOT Collect</h2>
+    <ul>
+      <li><strong>No analytics or tracking.</strong> The Extension does not use Google Analytics, Mixpanel, or any analytics service.</li>
+      <li><strong>No cookies.</strong> The Extension does not set or read cookies.</li>
+      <li><strong>No browsing history.</strong> The Extension does not track or store your browsing activity.</li>
+      <li><strong>We only process the personal information described in this policy</strong> and do not collect additional categories of personal information beyond what is listed above.</li>
+      <li><strong>No data sold or shared.</strong> We do not sell, rent, or share your data with any third party for marketing purposes.</li>
+    </ul>
+
+    <h2>Third-Party Services</h2>
+
+    <h3>DeepSeek API</h3>
+    <ul>
+      <li><strong>What is sent:</strong> Your profile information, the target profile's text, and your API key are sent directly from your browser to the DeepSeek API endpoint (<code>https://api.deepseek.com/v1</code>).</li>
+      <li><strong>Who operates it:</strong> DeepSeek.</li>
+      <li><strong>Data retention:</strong> Governed by DeepSeek's own privacy policy. We encourage users to review <a href="https://www.deepseek.com/">DeepSeek's Privacy Policy and Terms of Service</a> before using their API.</li>
+      <li><strong>Your control:</strong> You can stop sending data at any time by not using the generation feature, or by removing your API key.</li>
+    </ul>
+
+    <h3>LinkedIn</h3>
+    <ul>
+      <li>The Extension reads publicly visible profile information from LinkedIn pages you visit in your browser.</li>
+      <li>The Extension only accesses information that is already visible in your browser at the time you request message generation.</li>
+      <li>The Extension does NOT use LinkedIn's official API.</li>
+      <li>The Extension does NOT scrape LinkedIn in bulk or automatically. It only reads the page you are currently viewing when you explicitly click "Generate Messages," or when you explicitly request to sync your own profile.</li>
+      <li>The Extension does NOT send any data back to LinkedIn.</li>
+    </ul>
+
+    <h2>How to Delete Your Data</h2>
+    <p>You can delete all Extension data at any time:</p>
+    <ul>
+      <li><strong>Quick method:</strong> Right-click the Extension icon in Chrome, then select "Remove from Chrome." Removing the extension typically removes locally stored extension data.</li>
+      <li><strong>Granular method:</strong> Go to Chrome Settings &rarr; Extensions &rarr; LinkedIn AI Assistant &rarr; Details &rarr; "Storage" to see how much storage is used. Removing the extension clears all data.</li>
+      <li><strong>Manual method:</strong> Open Chrome DevTools &rarr; Application &rarr; Local Storage &rarr; remove individual entries.</li>
+    </ul>
+    <p>Depending on your browser configuration (e.g., Chrome Sync settings), you may also choose to clear extension storage manually to ensure all data is removed.</p>
+
+    <h2>Data Security</h2>
+    <ul>
+      <li>All data is stored in Chrome's local storage, which is isolated per-extension and per-browser profile.</li>
+      <li>Your API key is stored in plain text in local storage (Chrome does not provide encrypted storage for extensions). Anyone with physical access to your computer could potentially access it. Do not use this Extension on shared or public computers.</li>
+      <li>Do not install this Extension on managed enterprise devices unless permitted by your organization.</li>
+      <li>API calls to DeepSeek are made over HTTPS, encrypting data in transit.</li>
+    </ul>
+
+    <h2>Children's Privacy</h2>
+    <p>This Extension is not directed to children under 16. We do not knowingly collect data from children. If you believe a child has provided data through this Extension, please contact us so we can delete it.</p>
+
+    <h2>LinkedIn Terms of Service Notice</h2>
+    <p>This Extension is not affiliated with, endorsed by, or sponsored by LinkedIn. The Extension reads publicly visible information from LinkedIn pages for the user's own personal use. The Extension only accesses information that is already visible in your browser at the time you request message generation. Users are responsible for complying with LinkedIn's Terms of Service and User Agreement when using this Extension.</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this privacy policy from time to time. When we do, we will revise the "Last updated" date at the top. For significant changes, we will display a notice in the Extension.</p>
+
+    <h2>Disclaimer</h2>
+    <p>This Extension is an independent productivity tool and is not affiliated with, endorsed by, or sponsored by LinkedIn or DeepSeek. Users are solely responsible for complying with the Terms of Service of any third-party platform they use in conjunction with this Extension.</p>
+
+    <h2>Contact</h2>
+    <p>If you have questions about this privacy policy or the Extension's data practices, please contact:</p>
+    <ul>
+      <li><strong>Email:</strong> <a href="mailto:stevenli2007@berkeley.edu">stevenli2007@berkeley.edu</a></li>
+      <li><strong>GitHub Issues:</strong> repository URL to be configured before publication</li>
+    </ul>
+
+    <div class="footer">
+      This privacy policy is bundled with the LinkedIn AI Networking Assistant Chrome Extension. Source code available in the project repository at <code>docs/PRIVACY_POLICY.md</code>.
+    </div>
+  </div>
+</body>
+</html>
