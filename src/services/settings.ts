@@ -1,4 +1,4 @@
-import type { TargetProfile, UserProfile } from "@/types";
+import type { UserProfile } from "@/types";
 
 export interface AppSettings {
   userProfile: UserProfile;
@@ -82,7 +82,6 @@ function clampTemperature(value: number): number {
 }
 
 const IMPORT_PENDING_KEY = "importMyProfilePending";
-const PENDING_USER_PROFILE_KEY = "pendingUserProfile";
 const IMPORT_EXPIRATION_MS = 60_000;
 
 interface ImportPendingState {
@@ -125,60 +124,6 @@ export async function isImportPending(): Promise<boolean> {
 export async function clearImportPending(): Promise<void> {
   return new Promise((resolve) => {
     chrome.storage.local.remove(IMPORT_PENDING_KEY, () => {
-      resolve();
-    });
-  });
-}
-
-export function mapTargetProfileToUserProfile(
-  target: TargetProfile
-): Partial<UserProfile> {
-  const result: Partial<UserProfile> = {};
-
-  if (target.targetName) result.userName = target.targetName;
-  if (target.targetHeadline) result.userHeadline = target.targetHeadline;
-  if (target.targetCompany) result.userCompany = target.targetCompany;
-  if (target.targetSchool) result.userSchool = target.targetSchool;
-
-  const backgroundParts: string[] = [];
-  if (target.targetAbout) backgroundParts.push(target.targetAbout);
-  if (target.targetExperience) backgroundParts.push(target.targetExperience);
-  if (backgroundParts.length > 0) {
-    result.userBackground = backgroundParts.join("\n\n");
-  }
-
-  return result;
-}
-
-export async function savePendingUserProfile(
-  target: TargetProfile
-): Promise<void> {
-  const mapped = mapTargetProfileToUserProfile(target);
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set({ [PENDING_USER_PROFILE_KEY]: mapped }, () => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-      } else {
-        resolve();
-      }
-    });
-  });
-}
-
-export async function loadPendingUserProfile(): Promise<Partial<UserProfile> | null> {
-  return new Promise((resolve) => {
-    chrome.storage.local.get([PENDING_USER_PROFILE_KEY], (result) => {
-      const value = result[PENDING_USER_PROFILE_KEY] as
-        | Partial<UserProfile>
-        | undefined;
-      resolve(value && typeof value === "object" ? value : null);
-    });
-  });
-}
-
-export async function clearPendingUserProfile(): Promise<void> {
-  return new Promise((resolve) => {
-    chrome.storage.local.remove(PENDING_USER_PROFILE_KEY, () => {
       resolve();
     });
   });

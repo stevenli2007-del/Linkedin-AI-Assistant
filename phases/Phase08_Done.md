@@ -140,10 +140,10 @@ Full verification report: `phases/Phase08_Checklist_Verification.md`.
 | 3. Release-Specific | ✅ PASS |
 
 **4 low-priority issues (non-blocking, deferred to Phase 09/11):**
-1. `web_accessible_resources` uses `<all_urls>` — can narrow in Phase 11
-2. Architecture.md file structure description slightly outdated
-3. Settings.tsx inline text "Never leaves your browser" not synced with privacy policy wording
-4. Dead code: `pendingUserProfile` functions in settings.ts (Phase 7 legacy)
+1. ~~`web_accessible_resources` uses `<all_urls>`~~ — **Resolved in wrap-up:** removed entirely (privacy.html opens as extension page, no web_accessible_resources needed)
+2. ~~Architecture.md file structure description slightly outdated~~ — **Resolved in wrap-up:** fully rewritten to match actual codebase
+3. Settings.tsx inline text "Never leaves your browser" not synced with privacy policy wording — minor wording, deferred to Phase 09
+4. ~~Dead code: `pendingUserProfile` functions in settings.ts (Phase 7 legacy)~~ — **Resolved in wrap-up:** removed `mapTargetProfileToUserProfile`, `savePendingUserProfile`, `loadPendingUserProfile`, `clearPendingUserProfile`, and `PENDING_USER_PROFILE_KEY`
 
 ### 2.7 Version Control
 
@@ -257,10 +257,21 @@ Per CodingRules and Roadmap scope:
 
 - **No new features** — Phase 08 is hardening only
 - **No backend proxy** — deferred to Phase 09 (ADR-003/004 will be superseded then)
-- **No Architecture.md update** — L-2 noted as low priority, deferred
-- **No README.md rewrite** — L-4 noted, will be done as part of Phase 11 store preparation
-- **No `web_accessible_resources` narrowing** — deferred to Phase 11
-- **No dead code cleanup in settings.ts** — `pendingUserProfile` functions deferred to Phase 09
+- **Settings.tsx wording sync** — minor wording mismatch ("Never leaves your browser" vs privacy policy), deferred to Phase 09
+
+### 8.1 Wrap-Up Items (Post-Review)
+
+The following items were completed after initial Phase 08 review, before final sign-off:
+
+| Item | Status | Details |
+|------|--------|---------|
+| Architecture.md update | ✅ Done | Fully rewritten: actual file structure, two data flows, storage schema, security architecture, message types, design decisions |
+| Dead code removal | ✅ Done | Removed `pendingUserProfile`-related code from `settings.ts` (5 functions + 1 constant + unused `TargetProfile` import) |
+| web_accessible_resources | ✅ Done | Removed entirely — `privacy.html` opens as extension page via `chrome.tabs.create`, no web access needed |
+| README.md | ✅ Done | Complete rewrite: features, installation, setup, usage, tech stack, project structure, development, privacy, roadmap, contact |
+| Database.md | ✅ Done | Updated to match actual storage schema (`appSettings`, `importMyProfilePending`, `pendingRawProfileText`), removed outdated keys |
+
+**Build verified:** `npm run build` — 0 errors, 39 modules transformed.
 
 ---
 
@@ -281,7 +292,8 @@ All Phase 08 exit criteria are met (pending user approval of this report). The c
 
 - **Developer:** WorkBuddy AI
 - **Date:** 2026-06-27
-- **Git commit:** `34430f9`
+- **Git commit:** `34430f9` (initial) + wrap-up changes
+- **Wrap-up completed:** 2026-06-27 — Architecture.md, README.md, Database.md rewritten; dead code removed; web_accessible_resources removed
 - **Requires User Review:** Yes — please review this report and approve to close Phase 08
 
 ---

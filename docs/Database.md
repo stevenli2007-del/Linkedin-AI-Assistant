@@ -1,81 +1,103 @@
 # Database.md
 
-## UserProfile
+## Data Storage
 
-| Field            | Type   | Description       |
-| ---------------- | ------ | ----------------- |
-| userName         | string | User's full name  |
-| userHeadline     | string | User's headline   |
-| userSchool       | string | User's school     |
-| userCompany      | string | User's company    |
-| userBackground   | string | User's background |
-| userGoals        | string | User's goals      |
-| userInterests    | string | User's interests  |
+All data is stored in **Chrome Local Storage** (`chrome.storage.local`).
+No backend database in V1.
 
 ---
 
-## TargetProfile
+## TypeScript Interfaces
 
-| Field            | Type   | Description            |
-| ---------------- | ------ | ---------------------- |
-| targetName       | string | Target's full name     |
-| targetHeadline   | string | Target's headline      |
-| targetSchool     | string | Target's school        |
-| targetCompany    | string | Target's company       |
-| targetLocation   | string | Target's location      |
-| targetAbout      | string | Target's about section |
-| targetExperience | string | Target's experience    |
+### UserProfile
 
----
+| Field            | Type   | Description                |
+| ---------------- | ------ | -------------------------- |
+| userName         | string | User's full name           |
+| userHeadline     | string | User's headline / title    |
+| userSchool       | string | User's school(s)           |
+| userCompany      | string | User's current company     |
+| userBackground   | string | Professional background    |
+| userGoals        | string | Networking goals           |
+| userInterests    | string | Interests / topics         |
 
-## Prompt
+### TargetProfile
 
-| Field           | Type   | Description                    |
-| --------------- | ------ | ------------------------------ |
-| systemPrompt    | string | System-level instruction       |
-| userPrompt      | string | User-level instruction         |
-| generatedPrompt | string | Final combined prompt sent to LLM |
+| Field            | Type   | Description                |
+| ---------------- | ------ | -------------------------- |
+| targetName       | string | Target's full name         |
+| targetHeadline   | string | Target's headline          |
+| targetSchool     | string | Target's school(s)         |
+| targetCompany    | string | Target's company           |
+| targetLocation   | string | Target's location          |
+| targetAbout      | string | Target's about section     |
+| targetExperience | string | Target's experience        |
 
----
+### AppSettings
 
-## GeneratedMessage
+| Field         | Type       | Description                              |
+| ------------- | ---------- | ---------------------------------------- |
+| userProfile   | UserProfile| User's own profile                       |
+| apiKey        | string     | DeepSeek API key (sk-...)                |
+| model         | string     | Model name (default: "deepseek-chat")    |
+| temperature   | number     | LLM temperature 0–2 (default: 0.7)       |
 
-| Field          | Type   | Description              |
-| -------------- | ------ | ------------------------ |
-| messageId      | string | Unique message ID        |
-| messageStyle   | string | professional / friendly / entrepreneur / academic |
-| messageContent | string | The generated message    |
-| generatedTime  | number | Unix timestamp           |
+### GeneratedMessage
 
----
+| Field          | Type   | Description                                        |
+| -------------- | ------ | -------------------------------------------------- |
+| messageId      | string | Unique ID (msg_timestamp_random)                   |
+| messageStyle   | string | professional / friendly / entrepreneur / academic  |
+| messageContent | string | The generated message text                         |
+| generatedTime  | number | Unix timestamp (ms)                                |
 
-## Settings
+### MessageStyle
 
-| Field         | Type   | Description              |
-| ------------- | ------ | ------------------------ |
-| selectedModel | string | e.g. deepseek-chat       |
-| temperature   | number | LLM temperature (0–1)    |
-| language      | string | Output language          |
+```typescript
+type MessageStyle = "professional" | "friendly" | "entrepreneur" | "academic";
+```
+
+### PromptPayload
+
+| Field           | Type   | Description                        |
+| --------------- | ------ | ---------------------------------- |
+| systemPrompt    | string | System-level instruction           |
+| userPrompt      | string | User-level instruction             |
+| generatedPrompt | string | Combined prompt (system + user)    |
 
 ---
 
 ## Chrome Storage Keys
 
-| Key            | Description                        |
-| -------------- | ---------------------------------- |
-| userProfile    | Stores the UserProfile object      |
-| settings       | Stores the Settings object         |
-| messageHistory | Stores array of GeneratedMessage   |
+| Key                       | Type                       | Description                                     |
+| ------------------------- | -------------------------- | ----------------------------------------------- |
+| `appSettings`             | AppSettings                | User profile, API key, model, temperature       |
+| `importMyProfilePending`  | ImportPendingState \| null | Auto-import flag (60s TTL)                      |
+| `pendingRawProfileText`   | string                     | Raw LinkedIn text awaiting AI refinement        |
+
+### ImportPendingState
+
+| Field      | Type    | Description                              |
+| ---------- | ------- | ---------------------------------------- |
+| pending    | true    | Always true when set                     |
+| startedAt  | number  | Timestamp when import was triggered      |
+
+> The `pending` flag expires after 60 seconds. The content script checks this
+> flag before dumping profile text, preventing automatic scraping on every
+> LinkedIn profile visit.
 
 ---
 
 ## Naming Convention
 
-- camelCase only
-- No snake_case
-- No abbreviations
-- Always use complete English words
+- **camelCase** only for variables, functions, and storage keys
+- **PascalCase** for TypeScript interfaces and React components
+- **lowercase** for folders
+- No abbreviations — always use complete English words
 
-✅ Correct: `userProfile`, `currentCompany`, `targetHeadline`
-
-❌ Incorrect: `uid`, `usr`, `company_name`
+| Correct              | Incorrect              |
+| -------------------- | ---------------------- |
+| `userProfile`        | `user_profile`         |
+| `targetHeadline`     | `tgtHeadline`          |
+| `appSettings`        | `app_settings`         |
+| `importMyProfilePending` | `import_pending`    |
