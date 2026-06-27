@@ -200,6 +200,43 @@ No new decision that conflicts with these records can be made without updating t
 
 ---
 
+### ADR-011: Exponential Backoff Retry for DeepSeek API Calls
+
+- **Status:** Accepted
+- **Context:** DeepSeek API may return HTTP 429 (rate limit) or 500/502/503 (server errors) under load. Phase 07.5 mitigated this by disabling buttons during requests, but ReviewChecklist 2.9 explicitly requires "retry with backoff". Without retry, transient failures produce poor user experience.
+- **Decision:** Implement a shared `callDeepSeekAPI()` helper that retries retriable errors (429, 500, 502, 503, timeout, network error) up to 3 times with exponential backoff (1s → 2s → 4s). Non-retriable errors (401, 402, other 4xx) throw immediately.
+- **Alternatives Considered:**
+  - No retry (current Phase 07.5 state): Rejected — ReviewChecklist explicitly requires it.
+  - Linear backoff (1s, 1s, 1s): Rejected — exponential is more effective for rate limits.
+  - Retry all errors: Rejected — 401/402 are authentication failures that won't resolve with retry.
+- **Consequences:**
+  - Transient API failures are handled gracefully without user intervention.
+  - Worst-case added latency: ~7s (1+2+4) for 3 consecutive failures before final error.
+  - Both `generateMessages()` and `refineProfile()` share the same retry logic, ensuring consistency.
+  - Resolves KI-008.
+- **Date:** 2026-06-27
+- **Review Date:** 2026-12-31
+
+---
+
+### ADR-012: Content Security Policy for Chrome MV3
+
+- **Status:** Accepted
+- **Context:** Chrome Web Store requires extensions to have a Content Security Policy that blocks unsafe-eval and unsafe-inline. The manifest.json had no CSP field, which would fail ReviewChecklist 2.9 and likely cause store rejection.
+- **Decision:** Add `"content_security_policy": { "extension_pages": "script-src 'self'; object-src 'self'" }` to manifest.json. This is the strictest practical CSP for a Chrome MV3 extension — only allows scripts from the extension itself, no inline scripts, no eval, no remote code.
+- **Alternatives Considered:**
+  - No CSP: Rejected — fails ReviewChecklist and store requirements.
+  - Allow 'unsafe-inline': Rejected — unnecessary and increases attack surface.
+  - Allow specific remote scripts: Rejected — no remote scripts are needed.
+- **Consequences:**
+  - Blocks all inline scripts and eval, reducing XSS risk.
+  - No impact on functionality — the extension uses only bundled scripts.
+  - May need adjustment if future phases require external script loading (unlikely).
+- **Date:** 2026-06-27
+- **Review Date:** 2027-06-26
+
+---
+
 ## 4. How to Add a New ADR
 
 When a new technical decision is made:
@@ -245,5 +282,7 @@ When a new technical decision is made:
 | ADR-008 | No Automatic Message Sending | Accepted (non-negotiable) | Never |
 | ADR-009 | camelCase, No Abbreviations | Accepted | Never |
 | ADR-010 | Minimal Apple-style UI | Accepted | 2027-06-26 |
+| ADR-011 | Exponential Backoff Retry | Accepted | 2026-12-31 |
+| ADR-012 | Content Security Policy | Accepted | 2027-06-26 |
 
 ---

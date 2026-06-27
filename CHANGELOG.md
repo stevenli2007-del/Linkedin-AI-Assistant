@@ -26,6 +26,41 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.0] — Production Readiness (Phase 08)
+
+### Added
+- Privacy policy (`docs/PRIVACY_POLICY.md` + `public/privacy.html`) with Chrome Web Store compliant language: browser permissions table, user control section, disclaimer, LinkedIn ToS notice.
+- Terms of Use (`docs/TERMS_OF_USE.md`) — 14 sections covering user responsibilities, disclaimers, liability.
+- Store submission checklist (`docs/STORE_SUBMISSION_CHECKLIST.md`) — 11 sections with screenshot guide, icon notes, functional test cases, policy compliance.
+- 3-step first-run onboarding card in popup (API key → profile → generate).
+- Collapsible FAQ in Settings (5 common questions).
+- Privacy Policy and Support links in popup footer and Settings footer.
+- Content Security Policy in manifest.json: `script-src 'self'; object-src 'self'`.
+- Exponential backoff retry for DeepSeek API calls (429/5xx/timeout, 3 retries, 1s→2s→4s).
+- Custom extension icons (speech bubble + AI sparkles) in 16/32/48/128px.
+- 5 store screenshots processed to Chrome Web Store specs.
+- Git repository initialized with `.gitignore`.
+- ADR-011 (Exponential Backoff Retry) and ADR-012 (Content Security Policy) in Decisions.md.
+
+### Changed
+- Version bumped from 0.1.0 to 1.0.0 (manifest.json, package.json, App.tsx footer).
+- `generateMessages()` and `refineProfile()` now share a common `callDeepSeekAPI()` helper (DRY).
+- Simple "add API key" hint replaced with structured 3-step onboarding card.
+
+### Fixed
+- **Critical:** Content script no longer auto-imports profile text on every LinkedIn profile visit — `isImportPending()` guard restored.
+- **High:** Removed residual `console.log` from background service worker.
+- **High:** `refineProfile()` now handles HTTP 500/502/503 with user-friendly error messages (was inconsistent with `generateMessages()`).
+- KI-008 (no rate limiting) resolved — retry with backoff implemented.
+- KI-004 (LinkedIn ToS risk) mitigated — privacy policy explicitly states user-initiated action, no automation, data scope limited.
+
+### Removed
+- Dead code: unused `AppSettings` and `ExtensionMessage` interfaces in `types/index.ts`.
+- Dead code: `GET_TARGET_PROFILE` message handler in `background/index.ts`.
+- Temp file `_resize_icons.py`.
+
+---
+
 ## [0.7.0] — MVP Feature Complete (Phase 7)
 
 ### Added

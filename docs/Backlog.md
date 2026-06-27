@@ -25,12 +25,14 @@ This backlog is a planning document only. Items here are not implemented unless 
 - Fix all critical and high-priority bugs.
 - Complete all items in `docs/ReviewChecklist.md`.
 - **Phase:** Phase 08
+- **Status:** ✅ Complete (2026-06-27) — 1 Critical + 4 High fixed, 12/12 checklist categories passed
 
 ### M2 — Privacy Policy Finalization
 
 - Publish a privacy policy that accurately describes data collection, storage, and API usage.
 - Link the privacy policy in the Chrome Web Store listing and in the extension settings.
 - **Phase:** Phase 08
+- **Status:** ✅ Complete (2026-06-27) — PRIVACY_POLICY.md + privacy.html + Terms of Use + store checklist created
 
 ### M3 — Backend Proxy for API Key Management
 
@@ -62,6 +64,7 @@ This backlog is a planning document only. Items here are not implemented unless 
 - Add retry logic with exponential backoff.
 - Distinguish between user-recoverable errors (e.g., invalid API key) and system errors.
 - **Phase:** Phase 08
+- **Status:** ✅ Complete (2026-06-27) — shared callDeepSeekAPI() with 3-retry exponential backoff
 
 ### S2 — Onboarding and Help Content
 
@@ -69,6 +72,7 @@ This backlog is a planning document only. Items here are not implemented unless 
 - Write a short FAQ inside the settings page.
 - Provide a link to documentation or support.
 - **Phase:** Phase 08
+- **Status:** ✅ Complete (2026-06-27) — 3-step onboarding card + 5-item FAQ + support links
 
 ### S3 — Store-Ready Assets
 
@@ -76,6 +80,7 @@ This backlog is a planning document only. Items here are not implemented unless 
 - Design promotional images for the Chrome Web Store.
 - Write a compelling store description.
 - **Phase:** Phase 08
+- **Status:** ✅ Complete (2026-06-27) — 4 icons + 5 screenshots + store description drafts + submission checklist
 
 ### S4 — Proxy Health and Monitoring
 
@@ -169,3 +174,4 @@ This backlog is a planning document only. Items here are not implemented unless 
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-06-26 | Initial Backlog with MoSCoW prioritization | WorkBuddy |
+| 2026-06-27 | M1, M2, S1, S2, S3 marked complete (Phase 08 done) | WorkBuddy |
