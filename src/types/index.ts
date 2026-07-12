@@ -3,6 +3,7 @@ export interface UserProfile {
   userHeadline: string;
   userSchool: string;
   userCompany: string;
+  userLocation: string;
   userBackground: string;
   userGoals: string;
   userInterests: string;
@@ -31,4 +32,15 @@ export interface GeneratedMessage {
   messageStyle: MessageStyle;
   messageContent: string;
   generatedTime: number;
+}
+
+export interface HistoryEntry {
+  id: string;
+  timestamp: number;
+  targetName: string;
+  targetHeadline: string;
+  targetCompany: string;
+  messageStyle: MessageStyle;
+  messageContent: string;
+  commonPoint: string;
 }

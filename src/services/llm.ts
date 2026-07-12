@@ -5,8 +5,8 @@
 import type { GeneratedMessage, MessageStyle, PromptPayload, UserProfile } from "@/types";
 import { buildProfileRefinePrompt } from "./prompt";
 import { loadClientId, saveClientId } from "./client-id";
+import { API_ENDPOINTS } from "@/config";
 
-const BACKEND_URL = "https://linkedin-ai-backend.stevenli2007.workers.dev";
 const EXTENSION_VERSION = "1.0.0";
 const FETCH_TIMEOUT_MS = 30_000;
 
@@ -187,7 +187,7 @@ async function callBackendAPI(
       if (maxTokens !== undefined) body.maxTokens = maxTokens;
 
       const response = await fetch(
-        `${BACKEND_URL}/api/v1/generate`,
+        API_ENDPOINTS.generate,
         {
           method: "POST",
           headers,
@@ -412,7 +412,7 @@ export async function refineProfile(
   let rawContent: string;
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v1/refine-profile`, {
+    const response = await fetch(API_ENDPOINTS.refineProfile, {
       method: "POST",
       headers,
       body,
@@ -472,6 +472,7 @@ export async function refineProfile(
     userName: safeString("userName"),
     userHeadline: safeString("userHeadline"),
     userCompany: safeString("userCompany"),
+    userLocation: safeString("userLocation"),
     userSchool: safeString("userSchool"),
     userBackground: safeString("userBackground"),
     userGoals: safeString("userGoals"),
@@ -486,4 +487,53 @@ export async function refineProfile(
   }
 
   return profile;
+}
+
+/**
+ * Find common points between user's profile and target's profile.
+ * Returns an array of common points (up to 5).
+ */
+export async function findCommonPoints(
+  apiMode: "shared" | "custom",
+  customApiKey: string | null,
+  prompt: PromptPayload,
+  options?: {
+    temperature?: number;
+    maxTokens?: number;
+  }
+): Promise<string[]> {
+  const temperature = options?.temperature ?? 0.5;
+
+  const messages: BackendMessage[] = [
+    { role: "system", content: prompt.systemPrompt },
+    { role: "user", content: prompt.userPrompt },
+  ];
+
+  const rawContent = await callBackendAPI(
+    apiMode,
+    customApiKey,
+    messages,
+    temperature,
+    512,
+    "Request timed out while finding common points. Please try again."
+  );
+
+  // Parse the JSON response
+  let jsonString = rawContent.trim();
+  const codeFenceMatch = jsonString.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeFenceMatch) {
+    jsonString = codeFenceMatch[1];
+  }
+
+  try {
+    const parsed = JSON.parse(jsonString) as { commonPoints?: string[] };
+    if (Array.isArray(parsed.commonPoints)) {
+      return parsed.commonPoints.filter((p) => typeof p === "string" && p.trim().length > 0);
+    }
+    return [];
+  } catch {
+    // If JSON parse fails, try to extract common points from raw text
+    const lines = rawContent.split("\n").filter((l) => l.trim().length > 0);
+    return lines.slice(0, 5);
+  }
 }

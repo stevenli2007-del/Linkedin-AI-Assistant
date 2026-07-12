@@ -1,4 +1,4 @@
-import type { UserProfile } from "@/types";
+import type { UserProfile, HistoryEntry } from "@/types";
 
 export interface AppSettings {
   userProfile: UserProfile;
@@ -6,14 +6,17 @@ export interface AppSettings {
   apiMode: "shared" | "custom";
   model: string;
   temperature: number;
+  maxMessageLength: number;
+  historyEnabled: boolean;
 }
 
-const DEFAULT_SETTINGS: AppSettings = {
+export const DEFAULT_SETTINGS: AppSettings = {
   userProfile: {
     userName: "",
     userHeadline: "",
     userSchool: "",
     userCompany: "",
+    userLocation: "",
     userBackground: "",
     userGoals: "",
     userInterests: "",
@@ -22,13 +25,19 @@ const DEFAULT_SETTINGS: AppSettings = {
   apiMode: "shared",
   model: "deepseek-chat",
   temperature: 0.7,
+  maxMessageLength: 300,
+  historyEnabled: false,
 };
 
 const STORAGE_KEY = "appSettings";
 
 export async function loadSettings(): Promise<AppSettings> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     chrome.storage.local.get([STORAGE_KEY], (result) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(`Failed to load settings: ${chrome.runtime.lastError.message}`));
+        return;
+      }
       const stored = result[STORAGE_KEY] as Partial<AppSettings> | undefined;
       resolve(mergeSettings(stored));
     });
@@ -49,12 +58,22 @@ export async function saveSettings(
   };
 
   return new Promise((resolve, reject) => {
-    chrome.storage.local.set({ [STORAGE_KEY]: next }, () => {
+    chrome.storage.local.set({ [STORAGE_KEY]: next }, async () => {
       if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-      } else {
-        resolve();
+        reject(new Error(`Failed to save settings: ${chrome.runtime.lastError.message}`));
+        return;
       }
+      // Verify write succeeded by reading back
+      try {
+        const verified = await loadSettings();
+        if (verified.userProfile.userName !== next.userProfile.userName) {
+          reject(new Error("Settings save verification failed. Please try again."));
+          return;
+        }
+      } catch {
+        // If verification read fails, still resolve — save itself succeeded
+      }
+      resolve();
     });
   });
 }
@@ -76,6 +95,12 @@ function mergeSettings(stored: Partial<AppSettings> | undefined): AppSettings {
       typeof stored.temperature === "number"
         ? clampTemperature(stored.temperature)
         : DEFAULT_SETTINGS.temperature,
+    maxMessageLength:
+      typeof stored.maxMessageLength === "number" && stored.maxMessageLength > 0
+        ? Math.min(1000, Math.max(50, stored.maxMessageLength))
+        : DEFAULT_SETTINGS.maxMessageLength,
+    historyEnabled:
+      typeof stored.historyEnabled === "boolean" ? stored.historyEnabled : false,
   };
 }
 
@@ -147,6 +172,46 @@ export async function loadPendingRawText(): Promise<string | null> {
 export async function clearPendingRawText(): Promise<void> {
   return new Promise((resolve) => {
     chrome.storage.local.remove(PENDING_RAW_TEXT_KEY, () => {
+      resolve();
+    });
+  });
+}
+
+// ── History (Phase 10-2-4) ────────────────────────────────────────────────
+
+const HISTORY_KEY = "messageHistory";
+const HISTORY_MAX_ENTRIES = 500;
+
+export async function loadHistory(): Promise<HistoryEntry[]> {
+  return new Promise((resolve) => {
+    chrome.storage.local.get([HISTORY_KEY], (result) => {
+      const stored = result[HISTORY_KEY];
+      if (!Array.isArray(stored)) {
+        resolve([]);
+        return;
+      }
+      resolve(stored as HistoryEntry[]);
+    });
+  });
+}
+
+export async function saveHistoryEntry(entry: HistoryEntry): Promise<void> {
+  const current = await loadHistory();
+  const next = [entry, ...current].slice(0, HISTORY_MAX_ENTRIES);
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ [HISTORY_KEY]: next }, () => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+export async function clearHistory(): Promise<void> {
+  return new Promise((resolve) => {
+    chrome.storage.local.remove(HISTORY_KEY, () => {
       resolve();
     });
   });

@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { TargetProfile, GeneratedMessage, MessageStyle } from "@/types";
-import { buildPrompt, buildSingleStylePrompt } from "@/services/prompt";
-import { generateMessages, regenerateMessage } from "@/services/llm";
-import { loadSettings, saveSettings, type AppSettings } from "@/services/settings";
+import type { TargetProfile, GeneratedMessage, MessageStyle, HistoryEntry } from "@/types";
+import { buildPrompt, buildSingleStylePrompt, buildFindCommonPrompt } from "@/services/prompt";
+import { generateMessages, regenerateMessage, findCommonPoints } from "@/services/llm";
+import { loadSettings, saveSettings, saveHistoryEntry, DEFAULT_SETTINGS, type AppSettings } from "@/services/settings";
 import { Settings } from "./Settings";
+import { History } from "./History";
 
 const STYLE_LABELS: Record<MessageStyle, string> = {
   professional: "Professional",
@@ -19,26 +20,11 @@ const STYLE_ORDER: MessageStyle[] = [
   "academic",
 ];
 
-const DEFAULT_SETTINGS: AppSettings = {
-  userProfile: {
-    userName: "",
-    userHeadline: "",
-    userSchool: "",
-    userCompany: "",
-    userBackground: "",
-    userGoals: "",
-    userInterests: "",
-  },
-  apiKey: "",
-  apiMode: "shared",
-  model: "deepseek-chat",
-  temperature: 0.7,
-};
-
 function App() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [regeneratingStyles, setRegeneratingStyles] = useState<Set<MessageStyle>>(new Set());
   const [targetProfile, setTargetProfile] = useState<TargetProfile | null>(null);
@@ -49,6 +35,11 @@ function App() {
   const [editDraft, setEditDraft] = useState("");
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
   const toastTimerRef = useRef<number | null>(null);
+
+  // Find Common feature state
+  const [commonPoints, setCommonPoints] = useState<string[]>([]);
+  const [selectedCommonPoint, setSelectedCommonPoint] = useState<string | null>(null);
+  const [isFindingCommon, setIsFindingCommon] = useState(false);
 
   // Load settings from Chrome storage on mount
   useEffect(() => {
@@ -61,8 +52,11 @@ function App() {
           setSettingsLoaded(true);
         }
       })
-      .catch(() => {
+      .catch((err) => {
         if (!cancelled) {
+          // Load failed — log and use defaults, but show toast so user knows
+          console.error("Failed to load settings:", err);
+          setSettings(DEFAULT_SETTINGS);
           setSettingsLoaded(true);
         }
       });
@@ -144,7 +138,7 @@ function App() {
       const profile = response.data as TargetProfile;
       setTargetProfile(profile);
 
-      const prompt = buildPrompt(settings.userProfile, profile);
+      const prompt = buildPrompt(settings.userProfile, profile, settings.maxMessageLength, selectedCommonPoint ?? undefined);
       const generated = await generateMessages(
         settings.apiMode,
         settings.apiMode === "custom" ? settings.apiKey.trim() : null,
@@ -172,10 +166,84 @@ function App() {
     }
   };
 
-  const handleCopy = async (content: string) => {
+  const handleFindCommon = async () => {
+    if (!settings.userProfile.userName.trim()) {
+      setError("Please fill in your name in Settings first.");
+      return;
+    }
+
+    setIsFindingCommon(true);
+    setError("");
+    setCommonPoints([]);
+    setSelectedCommonPoint(null);
+
     try {
-      await navigator.clipboard.writeText(content);
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+
+      if (!tab?.id) throw new Error("Cannot access current tab");
+
+      const response = await chrome.tabs.sendMessage(tab.id, {
+        type: "EXTRACT_PROFILE",
+      });
+
+      if (!response?.success) {
+        throw new Error(response?.error || "Failed to extract profile");
+      }
+
+      const profile = response.data as TargetProfile;
+
+      const prompt = buildFindCommonPrompt(settings.userProfile, profile);
+      const points = await findCommonPoints(
+        settings.apiMode,
+        settings.apiMode === "custom" ? settings.apiKey.trim() : null,
+        prompt,
+        {
+          temperature: 0.5,
+          maxTokens: 512,
+        }
+      );
+
+      setCommonPoints(points);
+      setTargetProfile(profile);
+    } catch (err) {
+      let message =
+        err instanceof Error
+          ? err.message
+          : "Failed to find common points. Make sure you're on a LinkedIn profile page.";
+
+      if (message.includes("Receiving end does not exist")) {
+        message =
+          "Extension was updated. Please refresh the LinkedIn page and try again.";
+      }
+
+      setError(message);
+    } finally {
+      setIsFindingCommon(false);
+    }
+  };
+
+  const handleCopy = async (msg: GeneratedMessage) => {
+    try {
+      await navigator.clipboard.writeText(msg.messageContent);
       showToast("Copied to clipboard");
+
+      // Save to history if enabled
+      if (settings.historyEnabled && targetProfile) {
+        const entry: HistoryEntry = {
+          id: `${Date.now()}-${msg.messageStyle}`,
+          timestamp: Date.now(),
+          targetName: targetProfile.targetName,
+          targetHeadline: targetProfile.targetHeadline,
+          targetCompany: targetProfile.targetCompany,
+          messageStyle: msg.messageStyle,
+          messageContent: msg.messageContent,
+          commonPoint: selectedCommonPoint ?? "",
+        };
+        saveHistoryEntry(entry).catch(() => {});
+      }
     } catch {
       showToast("Copy failed");
     }
@@ -231,7 +299,8 @@ function App() {
       const prompt = buildSingleStylePrompt(
         settings.userProfile,
         targetProfile,
-        style
+        style,
+        settings.maxMessageLength,
       );
       const regenerated = await regenerateMessage(
         settings.apiMode,
@@ -290,6 +359,10 @@ function App() {
     );
   }
 
+  if (showHistory) {
+    return <History onBack={() => setShowHistory(false)} />;
+  }
+
   return (
     <div className="w-[360px] min-h-[400px] bg-white p-5 font-sans relative">
       {/* Header */}
@@ -305,13 +378,22 @@ function App() {
             <p className="text-xs text-gray-500">Smart connection messages</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowSettings(true)}
-          className="text-[11px] text-gray-500 hover:text-brand-600 font-medium"
-          title="Settings"
-        >
-          Settings
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowHistory(true)}
+            className="text-[11px] text-gray-500 hover:text-brand-600 font-medium"
+            title="History"
+          >
+            History
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="text-[11px] text-gray-500 hover:text-brand-600 font-medium"
+            title="Settings"
+          >
+            Settings
+          </button>
+        </div>
       </div>
 
       {/* Onboarding Guide — shown until profile name is set and (shared mode or custom mode with API key) */}
@@ -360,6 +442,88 @@ function App() {
           </ol>
         </div>
       ) : null}
+
+      {/* Message Length Limit — inline with Generate */}
+      <div className="flex items-center gap-3 mb-3">
+        <label className="text-[11px] font-medium text-gray-600 whitespace-nowrap shrink-0">
+          Max chars
+        </label>
+        <input
+          type="number"
+          value={settings.maxMessageLength}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (raw === "" || raw === "-") return;
+            const val = Number.parseInt(raw, 10);
+            if (!Number.isNaN(val)) {
+              setSettings((prev) => ({ ...prev, maxMessageLength: val }));
+              saveSettings({ maxMessageLength: val }).catch(() => {});
+            }
+          }}
+          onBlur={(e) => {
+            let val = Number.parseInt(e.target.value, 10);
+            if (Number.isNaN(val)) val = 300;
+            val = Math.max(50, Math.min(1000, val));
+            setSettings((prev) => ({ ...prev, maxMessageLength: val }));
+            saveSettings({ maxMessageLength: val }).catch(() => {});
+          }}
+          className="w-20 px-2.5 py-1.5 text-xs text-center border border-gray-300 rounded-apple
+                     focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500
+                     text-gray-700 font-medium tabular-nums"
+        />
+        <span className="text-[10px] text-gray-400">
+          per message
+        </span>
+      </div>
+
+      {/* Find Common Button */}
+      <button
+        onClick={handleFindCommon}
+        disabled={isFindingCommon || !settingsLoaded || (settings.apiMode === "custom" && !settings.apiKey.trim())}
+        className="w-full py-2 mt-3 rounded-apple bg-white text-brand-600 font-medium text-sm
+                   border border-brand-200 hover:bg-brand-50 active:scale-[0.98] transition-all
+                   disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isFindingCommon ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="w-4 h-4 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin" />
+            Finding common points...
+          </span>
+        ) : (
+          "Find Common Points"
+        )}
+      </button>
+
+      {/* Common Points Display */}
+      {commonPoints.length > 0 && (
+        <div className="mt-3 p-3 rounded-apple bg-brand-50 border border-brand-100">
+          <p className="text-[11px] font-medium text-brand-700 mb-2">
+            Select a common point to focus on:
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {commonPoints.map((point, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  setSelectedCommonPoint(selectedCommonPoint === point ? null : point);
+                }}
+                className={`px-2.5 py-1.5 rounded-full text-[10px] font-medium transition-all
+                  ${selectedCommonPoint === point
+                    ? "bg-brand-600 text-white shadow-sm"
+                    : "bg-white text-brand-700 border border-brand-200 hover:border-brand-400"
+                  }`}
+              >
+                {point}
+              </button>
+            ))}
+          </div>
+          {selectedCommonPoint && (
+            <p className="text-[10px] text-brand-600 mt-2">
+              ✓ Focusing on: {selectedCommonPoint}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Generate Button */}
       <button
@@ -464,7 +628,7 @@ function App() {
                       Edit
                     </button>
                     <button
-                      onClick={() => handleCopy(msg.messageContent)}
+                      onClick={() => handleCopy(msg)}
                       className="text-[11px] text-brand-600 hover:text-brand-700 font-medium"
                       title="Copy"
                     >
@@ -494,10 +658,15 @@ function App() {
 
       {/* Footer */}
       <div className="mt-5 pt-4 border-t border-gray-100">
-        <p className="text-[10px] text-gray-400 text-center">
-          LinkedIn AI Assistant v1.0.0
-        </p>
-        <div className="flex justify-center gap-3 mt-1">
+        <div className="flex items-center justify-center gap-1.5">
+          <p className="text-[10px] text-gray-400">
+            LinkedIn AI Assistant v1.0.0
+          </p>
+          <span className="text-[10px] font-medium text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded-full">
+            Beta
+          </span>
+        </div>
+        <div className="flex justify-center gap-3 mt-1.5">
           <a
             href="#"
             onClick={(e) => {
@@ -517,7 +686,19 @@ function App() {
             }}
             className="text-[10px] text-gray-400 hover:text-brand-600 transition-colors"
           >
-            Support
+            Feedback
+          </a>
+          <span className="text-gray-300">·</span>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              chrome.tabs.create({ url: "https://weixin.qq.com" });
+            }}
+            title="WeChat: Listeven2007"
+            className="text-[10px] text-gray-400 hover:text-brand-600 transition-colors"
+          >
+            WeChat
           </a>
         </div>
       </div>

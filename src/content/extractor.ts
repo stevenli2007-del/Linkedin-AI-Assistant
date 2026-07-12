@@ -731,6 +731,11 @@ export function extractTargetProfile(): TargetProfile {
  * We continue scrolling until page height stops changing.
  */
 async function triggerLazyLoad(): Promise<void> {
+  // Named timeouts for lazy-load scrolling (extracted from magic numbers)
+  const SCROLL_STEP_WAIT_MS = 400;   // Wait after each scroll increment for content to load
+  const FINAL_SCROLL_WAIT_MS = 800;  // Wait after scrolling to absolute bottom
+  const SCROLL_TO_TOP_WAIT_MS = 600; // Wait after scrolling back to top before extraction
+
   debug("triggerLazyLoad: starting scroll to trigger lazy render...");
 
   // Store initial height
@@ -746,7 +751,7 @@ async function triggerLazyLoad(): Promise<void> {
     window.scrollTo(0, scrollY);
 
     // Wait for any lazy loading to happen
-    await new Promise((r) => window.setTimeout(r, 400));
+    await new Promise((r) => window.setTimeout(r, SCROLL_STEP_WAIT_MS));
 
     // Check if page height changed (content loaded)
     const newHeight = document.body.scrollHeight;
@@ -768,11 +773,11 @@ async function triggerLazyLoad(): Promise<void> {
 
   // Phase 2: One final scroll to absolute bottom
   window.scrollTo(0, document.body.scrollHeight);
-  await new Promise((r) => window.setTimeout(r, 800));
+  await new Promise((r) => window.setTimeout(r, FINAL_SCROLL_WAIT_MS));
 
   // Phase 3: Scroll back to top for extraction
   window.scrollTo(0, 0);
-  await new Promise((r) => window.setTimeout(r, 600));
+  await new Promise((r) => window.setTimeout(r, SCROLL_TO_TOP_WAIT_MS));
 
   debug("triggerLazyLoad: completed");
 }
@@ -944,8 +949,9 @@ export function dumpProfileRawText(): string {
   text = text.replace(/\n{3,}/g, "\n\n");
   text = text.trim();
 
-  // Cap at 12000 chars — DeepSeek can handle ~16k tokens, this is well within limit
-  const maxChars = 12000;
+  // Cap at 16000 chars — DeepSeek can handle ~16k tokens, this ensures we capture
+  // the full About section even on long profiles with extensive experience entries
+  const maxChars = 16000;
   if (text.length > maxChars) {
     debug(`dumpProfileRawText: trimming from ${text.length} to ${maxChars} chars`);
     text = text.slice(0, maxChars);

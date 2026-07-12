@@ -65,7 +65,7 @@ export default {
       }
 
       // 4. 添加 CORS 头
-      response = addCORSHeaders(response);
+      response = addCORSHeaders(response, request);
 
       // 5. 记录响应日志
       console.log('[Response]', {

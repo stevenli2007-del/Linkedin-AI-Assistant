@@ -5,6 +5,7 @@ import {
   setImportPending,
   loadPendingRawText,
   clearPendingRawText,
+  saveSettings,
 } from "@/services/settings";
 import { refineProfile } from "@/services/llm";
 
@@ -32,6 +33,10 @@ const FAQ_ITEMS: Array<{ q: string; a: string }> = [
   {
     q: "Does this send messages automatically?",
     a: "No. You review, copy, and send every message yourself. Nothing is automated.",
+  },
+  {
+    q: "How do I report bugs or share feedback?",
+    a: "This is a Beta version — your feedback is invaluable! Email: stevenli2007@berkeley.edu | WeChat: Listeven2007. Bugs, ideas, or even a quick \"it works!\" all help us improve.",
   },
 ];
 
@@ -62,6 +67,11 @@ const USER_PROFILE_FIELDS: Array<{
     key: "userCompany",
     label: "Company",
     placeholder: "e.g. Stripe",
+  },
+  {
+    key: "userLocation",
+    label: "Location",
+    placeholder: "e.g. San Francisco Bay Area",
   },
   {
     key: "userSchool",
@@ -191,9 +201,17 @@ export function Settings({ settings, onSave, onCancel }: SettingsProps) {
     }
   };
 
-  const handlePreviewConfirm = () => {
+  const handlePreviewConfirm = async () => {
     if (!previewProfile) return;
+    // Update local draft
     setDraft((prev) => ({ ...prev, userProfile: previewProfile }));
+    // Immediately persist profile to storage (user shouldn't need to remember to click Save)
+    try {
+      await saveSettings({ userProfile: previewProfile });
+    } catch (err) {
+      // Don't block UI — settings page is still open, user can still click Save manually
+      console.error("Auto-save after Apply failed:", err);
+    }
     setPreviewProfile(null);
     setImportStatus("idle");
   };
@@ -498,6 +516,38 @@ export function Settings({ settings, onSave, onCancel }: SettingsProps) {
           <span>Balanced</span>
           <span>Creative</span>
         </div>
+      </section>
+
+      {/* Message History Toggle */}
+      <section className="mb-5">
+        <h2 className="text-xs font-semibold text-gray-900 uppercase tracking-wide mb-3">
+          Message History
+        </h2>
+        <label className="flex items-center justify-between cursor-pointer">
+          <div className="flex-1 mr-3">
+            <p className="text-xs font-medium text-gray-900">
+              Record copied messages
+            </p>
+            <p className="text-[10px] text-gray-500 mt-0.5 leading-relaxed">
+              When enabled, each message you copy is saved locally with the target's
+              name, style, and common points. You can view and export to CSV from the
+              History page. All data stays on your device.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDraft((prev) => ({ ...prev, historyEnabled: !prev.historyEnabled }))}
+            className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${
+              draft.historyEnabled ? "bg-brand-600" : "bg-gray-300"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                draft.historyEnabled ? "translate-x-4" : ""
+              }`}
+            />
+          </button>
+        </label>
       </section>
 
       {/* User Profile */}

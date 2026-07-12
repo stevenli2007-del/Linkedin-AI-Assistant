@@ -54,6 +54,8 @@ Phase 10: Beta Testing
 Phase 11: Chrome Web Store Release
         ↓
 Phase 12: Growth
+        ↓
+Phase 13: SaaS Transformation (RAG Memory, Cloud Sync, Subscriptions)
 ```
 
 ---
@@ -272,6 +274,16 @@ These phases prepare the stabilized MVP for real users, backend scale, and publi
   - User approves progression to Chrome Web Store release.
   - `phases/Phase10_Done.md` is completed.
 
+#### Phase 10 Sub-tasks (Beta Feedback Fixes)
+
+| ID | Task | Status |
+|----|------|--------|
+| 10-2-1 | Fix Profile persistence bug (data lost after reopening popup) | ✅ Complete |
+| 10-2-2 | Add user-configurable message length limit | ✅ Complete |
+| 10-2-2-1 | Add "Find Common Points" button (AI finds 5 commonalities, user selects one before generating) | ✅ Complete |
+| 10-2-3 | Improve Profile Sync data completeness (capture company, background, location, etc.) | ✅ Complete |
+| 10-2-4 | Add History feature + CSV export | ✅ Complete |
+
 ### Phase 11 — Chrome Web Store Release
 
 - **Goal:** Publish Version 1.0 to the Chrome Web Store.
@@ -307,6 +319,31 @@ These phases prepare the stabilized MVP for real users, backend scale, and publi
   - User approves the growth plan.
   - `phases/Phase12_Done.md` is completed.
 
+### Phase 13 — SaaS Transformation (Future, Post-V1)
+
+- **Goal:** Transform the extension from a free local tool into a SaaS product with cloud-backed intelligence.
+- **Dependencies:**
+  - Phase 12 Completed
+  - Sufficient user base and validated demand
+  - User approves the SaaS pivot decision
+- **Deliverables:**
+  - **User Account System** — registration, authentication, subscription tiers (free/pro/enterprise).
+  - **RAG (Retrieval-Augmented Generation) Memory** — vector database stores all past networking interactions (connection targets, message styles used, common points identified, response outcomes). When generating new messages, the system retrieves semantically relevant history and feeds it to the AI, enabling it to learn from past successes and personalize messages over time.
+    - Vector DB: Pinecone or Supabase pgvector
+    - Embedding model: text-embedding-3-small (OpenAI) or DeepSeek embedding
+    - Retrieval flow: user generates message → system embeds query → retrieves top-K relevant past interactions → augmented prompt → AI generates context-aware message
+  - **Cloud History Sync** — migrate local history to cloud, enable cross-device access.
+  - **Analytics Dashboard** — success rate tracking (accepted vs. ignored), style effectiveness, commonality patterns.
+  - **Team Features** — shared templates, team analytics (enterprise tier).
+  - **Payment Integration** — Stripe or Lemon Squeezy for subscription management.
+- **Exit Criteria:**
+  - SaaS architecture is deployed and stable.
+  - RAG memory demonstrably improves message quality (A/B tested against V1).
+  - At least 50 paying users within 90 days of SaaS launch.
+  - `phases/Phase13_Done.md` is completed.
+
+> **Note:** This phase is exploratory and will be fully scoped when the team is ready to pivot from a free extension to a SaaS product. The RAG architecture in particular requires careful design around data privacy, user consent, and GDPR/CCPA compliance.
+
 ---
 
 ## 6. Done Report Convention
@@ -331,3 +368,6 @@ No phase is considered complete without this report and explicit user review.
 | 2026-06-26 | Split into MVP Track (0–7) and Production Track (08–12) | WorkBuddy |
 | 2026-06-26 | Added Dependencies to every Phase | WorkBuddy |
 | 2026-06-26 | Inserted Phase 07.5 Stabilization between MVP and Production Tracks | WorkBuddy |
+| 2026-06-28 | Phase 10: Added sub-task table (10-2-1 to 10-2-4); marked 10-2-1 and 10-2-2 as complete | WorkBuddy |
+| 2026-06-28 | Phase 10: Added 10-2-2-1 (Find Common Points feature); marked complete | WorkBuddy |
+| 2026-06-28 | Added Phase 13: SaaS Transformation (RAG memory, cloud sync, subscriptions) | WorkBuddy |

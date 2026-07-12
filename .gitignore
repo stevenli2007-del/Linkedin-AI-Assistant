@@ -30,6 +30,6 @@ npm-debug.log*
 # Backend local dev state
 backend/.wrangler/
 backend/.dev.vars
-backend/test-*.js
+backend/tests/
 backend/test-*.json
 backend/SPRINT09_STATUS.md

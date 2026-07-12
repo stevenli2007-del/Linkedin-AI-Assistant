@@ -1,0 +1,5 @@
+Beta Test Feedback
+Ai生成的connection message没有字数限制，这导致Ai生成出的message 通常过长，超过了LinkedIn允许的message长度。提升后的版本应该新加一个输入框，用户可以自己输入限制，（例如限制Ai给我们生成的message只能在100 characters之内。其中“100”这个数字可以用户自己填写）
+用户端每次打开新窗口都需要重新sync personal profile。我们需要能够储存用户信息。
+Sync my profile这个功能对用户的personal profile信息抓取的还是不够全，怎么样能够在不违反LinkedIn ToS的限制下尽可能多的抓取准确信息？
+如果可以的话我想新增一个history功能，其中记录用户在什么时候用什么信息和什么人connect了，这个信息是什么style，其中用户和目标的共同点是什么。我希望这个history能被导出成一个spread sheet。我的朋友说可以考虑RAG记忆库。我不熟悉这个技术方案，你可以评估一下然后看看有没有更好的方式
