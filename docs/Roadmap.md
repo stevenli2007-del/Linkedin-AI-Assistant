@@ -297,6 +297,21 @@ These phases prepare the stabilized MVP for real users, backend scale, and publi
 | I5 | Replace magic numbers in `extractor.ts` with named constants | ✅ Resolved (2026-06-28) |
 | I6 | Restrict CORS to `chrome-extension://` origins only (was wildcard `*`) | ✅ Resolved (2026-06-28) |
 
+##### Phase 10-3 Public Beta (CWS Unlisted Route)
+
+| ID | Task | Status |
+|----|------|--------|
+| 10-3-1 | Sync outdated docs (Store Description, KNOWN_ISSUES, Checklist, Privacy Policy, Terms of Use) | ✅ Complete (2026-07-12) |
+| 10-3-2 | Host Privacy Policy + Terms of Use on GitHub Pages (public URLs) | ✅ Complete (2026-07-12) |
+| 10-3-3 | Register Chrome Web Store developer account ($5, user operation) | ✅ Complete (2026-07-12) |
+| 10-3-4 | Execute functional test checklist (16 tests, all passed) | ✅ Complete (2026-07-12) |
+| 10-3-5 | Build and package extension ZIP (94 KB, 11 files) | ✅ Complete (2026-07-12) |
+| 10-3-6 | Prepare Chrome Web Store store listing content + submission guide | ✅ Complete (2026-07-12) |
+| 10-3-7 | Submit to Chrome Web Store as Unlisted (user operation) | ⬜ Pending |
+| 10-3-8 | Distribute Unlisted link to 100-500 users, collect feedback (2-4 weeks) | ⬜ Pending |
+| 10-3-9 | Process public beta feedback and fix bugs | ⬜ Pending |
+| 10-3-10 | Write Phase 10-3 Done Report and sign off | ⬜ Pending |
+
 ### Phase 11 — Chrome Web Store Release
 
 - **Goal:** Publish Version 1.0 to the Chrome Web Store.
@@ -385,3 +400,4 @@ No phase is considered complete without this report and explicit user review.
 | 2026-06-28 | Phase 10: Added 10-2-2-1 (Find Common Points feature); marked complete | WorkBuddy |
 | 2026-06-28 | Added Phase 13: SaaS Transformation (RAG memory, cloud sync, subscriptions) | WorkBuddy |
 | 2026-07-12 | Phase 10: Added I1–I6 audit fix sub-task table; added completion dates to 10-2 series | WorkBuddy |
+| 2026-07-12 | Phase 10-3: Added Public Beta sub-task table (10-3-1 through 10-3-10); 10-3-1 to 10-3-6 marked complete | WorkBuddy |
