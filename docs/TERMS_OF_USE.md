@@ -118,7 +118,7 @@ If any provision of these Terms is found to be unenforceable or invalid, that pr
 For questions about these Terms, please contact:
 
 - **Email:** stevenli2007@berkeley.edu
-- **GitHub Issues:** [repository URL to be configured before publication]
+- **GitHub Issues:** https://github.com/stevenli2007-del/Linkedin-AI-Assistant/issues
 
 ---
 

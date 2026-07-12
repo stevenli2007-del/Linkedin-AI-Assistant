@@ -57,10 +57,10 @@ This checklist covers all requirements for submitting the LinkedIn AI Networking
 
 | # | Item | Status | Notes |
 |---|------|--------|-------|
-| 3.3.1 | Privacy Policy URL | ✅ | Bundle `privacy.html` with extension; also host at a public URL for the store listing field |
-| 3.3.2 | Terms of Use URL | ✅ | `docs/TERMS_OF_USE.md` created; host at public URL for store |
-| 3.3.3 | Support URL / contact | ✅ | stevenli2007@berkeley.edu; GitHub Issues page (repo URL needed) |
-| 3.3.4 | Homepage URL | ⬜ | Optional — GitHub repo or landing page |
+| 3.3.1 | Privacy Policy URL | ✅ | https://stevenli2007-del.github.io/Linkedin-AI-Assistant/privacy-policy.html |
+| 3.3.2 | Terms of Use URL | ✅ | https://stevenli2007-del.github.io/Linkedin-AI-Assistant/terms-of-use.html |
+| 3.3.3 | Support URL / contact | ✅ | stevenli2007@berkeley.edu; https://github.com/stevenli2007-del/Linkedin-AI-Assistant/issues |
+| 3.3.4 | Homepage URL | ✅ | https://github.com/stevenli2007-del/Linkedin-AI-Assistant |
 
 ---
 
