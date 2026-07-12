@@ -28,7 +28,7 @@ This checklist covers all requirements for submitting the LinkedIn AI Networking
 | 2.6 | All icons present (16, 32, 48, 128 px) | ✅ | Located in `dist/icons/` |
 | 2.7 | `privacy.html` bundled and accessible | ✅ | Registered in `web_accessible_resources` |
 | 2.8 | No unnecessary permissions requested | ✅ | Only `storage` + `activeTab`; host: linkedin.com + backend proxy (linkedin-ai-backend.stevenli2007.workers.dev) |
-| 2.9 | Package as `.zip` of `dist/` contents | ⬜ | Do before uploading: `cd dist && zip -r ../extension-v1.0.0.zip .` |
+| 2.9 | Package as `.zip` of `dist/` contents | ✅ | `linkedin-ai-assistant-v1.0.0-public-beta.zip` (94 KB) — 2026-07-12 |
 
 ---
 
