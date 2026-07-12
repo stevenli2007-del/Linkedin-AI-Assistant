@@ -10,9 +10,9 @@ This checklist covers all requirements for submitting the LinkedIn AI Networking
 
 | # | Item | Status | Notes |
 |---|------|--------|-------|
-| 1.1 | Google account registered | ⬜ | Required for Chrome Web Store Developer Dashboard |
-| 1.2 | One-time $5 registration fee paid | ⬜ | Required for publishing any extension |
-| 1.3 | Developer identity verified | ⬜ | Google may require identity verification |
+| 1.1 | Google account registered | ✅ | Personal Gmail account used — 2026-07-12 |
+| 1.2 | One-time $5 registration fee paid | ✅ | Paid — 2026-07-12 |
+| 1.3 | Developer identity verified | ⏳ | Verification in progress (non-trader status, does not block publishing) |
 
 ---
 
@@ -84,18 +84,27 @@ Google requires you to justify each permission and explain your data usage.
 
 | # | Test Case | Status | Notes |
 |---|-----------|--------|-------|
-| 5.1 | Install unpacked from `dist/` in Chrome | ⬜ | Load via `chrome://extensions` > Developer mode > Load unpacked |
-| 5.2 | Popup opens without errors | ⬜ | Check console for errors |
-| 5.3 | Generate messages on a LinkedIn profile | ⬜ | Verify 4 styles appear |
-| 5.4 | Copy a message to clipboard | ⬜ | Verify toast appears |
-| 5.5 | Edit a message and save | ⬜ | Verify edited content persists in session |
-| 5.6 | Regenerate a single message style | ⬜ | Verify only that style updates |
-| 5.7 | Open Settings, enter API key, save | ⬜ | Verify key persists after popup close/reopen |
-| 5.8 | Sync LinkedIn profile (auto-import) | ⬜ | Verify C-1 fix: only fires when user clicks sync |
-| 5.9 | Open Privacy Policy link | ⬜ | Verify opens in new tab |
-| 5.10 | API error handling (invalid key) | ⬜ | Enter wrong key, verify friendly error |
-| 5.11 | API rate limit retry | ⬜ | Hard to test manually; verify no infinite loop |
-| 5.12 | Uninstall clears data | ⬜ | Check `chrome://extensions` storage before/after |
+| 5.1 | Install unpacked from `dist/` in Chrome | ✅ | Loaded successfully, no errors — 2026-07-12 |
+| 5.2 | Popup opens without errors | ✅ | Console clean — 2026-07-12 |
+| 5.3 | Generate messages on a LinkedIn profile (Shared Mode) | ✅ | 4 styles appear, zero setup required — 2026-07-12 |
+| 5.4 | Copy a message to clipboard | ✅ | Toast appears — 2026-07-12 |
+| 5.5 | Edit a message and save | ✅ | Edit persists in session — 2026-07-12 |
+| 5.6 | Regenerate a single message style | ✅ | Only that style updates — 2026-07-12 |
+| 5.7 | Open Settings, enter API key (Custom Mode), save | ✅ | Key persists after popup close/reopen — 2026-07-12 |
+| 5.8 | Sync LinkedIn profile (auto-import) | ✅ | Only fires when user clicks sync — 2026-07-12 |
+| 5.9 | Open Privacy Policy link | ✅ | Opens in new tab — 2026-07-12 |
+| 5.10 | API error handling (invalid key) | ✅ | Friendly error message — 2026-07-12 |
+| 5.11 | API rate limit retry / Shared Mode limit handling | ✅ | No infinite loop, graceful error — 2026-07-12 |
+| 5.12 | Uninstall clears data | ✅ | Storage cleared after uninstall — 2026-07-12 |
+
+### 5b. New Feature Testing (Phase 10-2 additions)
+
+| # | Test Case | Status | Notes |
+|---|-----------|--------|-------|
+| 5b.1 | Find Common Points — shared schools/companies/industries detected | ✅ | Verified — 2026-07-12 |
+| 5b.2 | Message Length Limit — input and enforcement | ✅ | Verified — 2026-07-12 |
+| 5b.3 | History — messages recorded + CSV export | ✅ | Verified — 2026-07-12 |
+| 5b.4 | Profile Sync completeness — company, location, background fields | ✅ | Verified — 2026-07-12 |
 
 ---
 
