@@ -7,22 +7,38 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
-## [Unreleased]
+## [Unreleased] — Phase 10 Beta Testing
 
 ### Added
-- Nothing yet.
+- User-configurable message length limit — input field on main popup (default 300 characters, range 50–1000), auto-saved to `chrome.storage.local`, passed to LLM prompt to constrain output length.
+- "Find Common Points" feature — AI identifies 5 shared commonalities between user and target profile, user selects one, message generation incorporates the selection for personalized outreach.
+- History feature with CSV export — new `History.tsx` component recording timestamp, target name, message style, common points used, and generated message content. CSV download for spreadsheet analysis. Default off (opt-in via Settings toggle).
+- `src/config.ts` — single source of truth for `BACKEND_URL` and `API_ENDPOINTS`, eliminating hardcoded URLs and API version strings.
+- `docs/BETA_FEEDBACK_GUIDE.md` — beta testing guide with installation instructions and bug report template.
+- Beta distribution artifact (`linkedin-ai-assistant-v1.0.0-beta.zip`) for closed beta distribution.
+- `userLocation` field added to `UserProfile` type for better profile completeness.
+- History-related types (`HistoryEntry`) added to `types/index.ts`.
+- `historyEnabled` toggle added to `AppSettings`.
 
 ### Changed
-- Nothing yet.
+- `refineProfile()` prompt rewritten with field-level extraction instructions — LLM now receives explicit guidance per field (name, headline, company, school, location, about, experience) instead of a generic "extract everything" instruction.
+- Raw profile text cap increased from 12,000 to 16,000 characters to capture more profile data.
+- `handlePreviewConfirm` now writes to `chrome.storage.local` immediately on confirmation, instead of only updating React state (fixes data loss on popup close).
+- `DEFAULT_SETTINGS` deduplicated — now exported once from `settings.ts` and imported in `App.tsx`, eliminating parallel definitions.
+- Magic numbers in `extractor.ts` replaced with named constants (`SCROLL_STEP_WAIT_MS`, `MAX_SCROLL_ATTEMPTS`, etc.).
+- CORS policy in `backend/src/middleware/cors.ts` restricted to `chrome-extension://` origins only (was wildcard `*`).
+- Backend test files moved from `backend/` root to `backend/tests/` directory; `.gitignore` updated accordingly.
 
 ### Fixed
-- Nothing yet.
-
-### Removed
-- Nothing yet.
-
-### Breaking Changes
-- None.
+- **10-2-1:** Profile data lost after reopening popup — `handlePreviewConfirm` now persists to `chrome.storage.local` immediately.
+- **10-2-2:** AI-generated messages exceeding LinkedIn's 300-character connection note limit — user-configurable length limit now constrains LLM output.
+- **10-2-3:** Profile sync capturing incomplete data — rewritten `refineProfile` prompt with field-level instructions and increased raw text cap.
+- **I1:** Backend test files (`test-*.js`) scattered in `backend/` root — moved to `backend/tests/`.
+- **I2:** Hardcoded backend URL throughout extension code — extracted to `src/config.ts` (`BACKEND_URL`).
+- **I3:** Hardcoded API version string (`/api/v1/`) — extracted to `src/config.ts` (`API_ENDPOINTS`).
+- **I4:** `DEFAULT_SETTINGS` duplicated in `settings.ts` and `App.tsx` — unified to single export.
+- **I5:** Magic numbers in `extractor.ts` (scroll delays, attempt counts) — replaced with named constants.
+- **I6:** CORS `Access-Control-Allow-Origin: *` in backend — restricted to `chrome-extension://` origins only.
 
 ---
 

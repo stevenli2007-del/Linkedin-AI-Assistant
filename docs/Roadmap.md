@@ -274,15 +274,28 @@ These phases prepare the stabilized MVP for real users, backend scale, and publi
   - User approves progression to Chrome Web Store release.
   - `phases/Phase10_Done.md` is completed.
 
-#### Phase 10 Sub-tasks (Beta Feedback Fixes)
+#### Phase 10 Sub-tasks
+
+##### Closed Beta Feedback Fixes (10-2 series)
 
 | ID | Task | Status |
 |----|------|--------|
-| 10-2-1 | Fix Profile persistence bug (data lost after reopening popup) | ✅ Complete |
-| 10-2-2 | Add user-configurable message length limit | ✅ Complete |
-| 10-2-2-1 | Add "Find Common Points" button (AI finds 5 commonalities, user selects one before generating) | ✅ Complete |
-| 10-2-3 | Improve Profile Sync data completeness (capture company, background, location, etc.) | ✅ Complete |
-| 10-2-4 | Add History feature + CSV export | ✅ Complete |
+| 10-2-1 | Fix Profile persistence bug (data lost after reopening popup) | ✅ Complete (2026-06-28) |
+| 10-2-2 | Add user-configurable message length limit | ✅ Complete (2026-06-28) |
+| 10-2-2-1 | Add "Find Common Points" button (AI finds 5 commonalities, user selects one before generating) | ✅ Complete (2026-06-28) |
+| 10-2-3 | Improve Profile Sync data completeness (capture company, background, location, etc.) | ✅ Complete (2026-06-28) |
+| 10-2-4 | Add History feature + CSV export | ✅ Complete (2026-06-28) |
+
+##### Phase 9.5 Engineering Audit Fixes (I1–I6)
+
+| ID | Task | Status |
+|----|------|--------|
+| I1 | Move backend test files to `backend/tests/`, update `.gitignore` | ✅ Resolved (2026-06-28) |
+| I2 | Extract hardcoded backend URL to `src/config.ts` (`BACKEND_URL`) | ✅ Resolved (2026-06-28) |
+| I3 | Extract hardcoded API version to `src/config.ts` (`API_ENDPOINTS`) | ✅ Resolved (2026-06-28) |
+| I4 | Deduplicate `DEFAULT_SETTINGS` — single export from `settings.ts` | ✅ Resolved (2026-06-28) |
+| I5 | Replace magic numbers in `extractor.ts` with named constants | ✅ Resolved (2026-06-28) |
+| I6 | Restrict CORS to `chrome-extension://` origins only (was wildcard `*`) | ✅ Resolved (2026-06-28) |
 
 ### Phase 11 — Chrome Web Store Release
 
@@ -371,3 +384,4 @@ No phase is considered complete without this report and explicit user review.
 | 2026-06-28 | Phase 10: Added sub-task table (10-2-1 to 10-2-4); marked 10-2-1 and 10-2-2 as complete | WorkBuddy |
 | 2026-06-28 | Phase 10: Added 10-2-2-1 (Find Common Points feature); marked complete | WorkBuddy |
 | 2026-06-28 | Added Phase 13: SaaS Transformation (RAG memory, cloud sync, subscriptions) | WorkBuddy |
+| 2026-07-12 | Phase 10: Added I1–I6 audit fix sub-task table; added completion dates to 10-2 series | WorkBuddy |
