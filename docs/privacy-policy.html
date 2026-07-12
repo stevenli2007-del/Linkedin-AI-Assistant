@@ -21,86 +21,37 @@
       padding: 48px 56px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
-    h1 {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      color: #111;
-    }
-    .updated {
-      font-size: 13px;
-      color: #888;
-      margin-bottom: 32px;
-    }
-    h2 {
-      font-size: 19px;
-      font-weight: 600;
-      margin-top: 36px;
-      margin-bottom: 12px;
-      color: #222;
-    }
-    h3 {
-      font-size: 15px;
-      font-weight: 600;
-      margin-top: 20px;
-      margin-bottom: 8px;
-      color: #333;
-    }
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; color: #111; }
+    .updated { font-size: 13px; color: #888; margin-bottom: 32px; }
+    h2 { font-size: 19px; font-weight: 600; margin-top: 36px; margin-bottom: 12px; color: #222; }
+    h3 { font-size: 15px; font-weight: 600; margin-top: 20px; margin-bottom: 8px; color: #333; }
     p { margin-bottom: 12px; font-size: 15px; color: #333; }
     ul { margin: 8px 0 16px 20px; }
     li { margin-bottom: 6px; font-size: 15px; color: #333; }
     .callout {
-      background: #f5f3ff;
-      border-left: 3px solid #7c3aed;
-      padding: 16px 20px;
-      border-radius: 8px;
-      margin: 16px 0;
-      font-size: 15px;
+      background: #f5f3ff; border-left: 3px solid #7c3aed;
+      padding: 16px 20px; border-radius: 8px; margin: 16px 0; font-size: 15px;
     }
     .callout-green {
-      background: #f0fdf4;
-      border-left: 3px solid #16a34a;
-      padding: 16px 20px;
-      border-radius: 8px;
-      margin: 16px 0;
-      font-size: 15px;
+      background: #f0fdf4; border-left: 3px solid #16a34a;
+      padding: 16px 20px; border-radius: 8px; margin: 16px 0; font-size: 15px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 12px 0 20px;
-    }
-    th, td {
-      text-align: left;
-      padding: 10px 14px;
-      border-bottom: 1px solid #eee;
-      font-size: 14px;
-    }
-    th {
-      font-weight: 600;
-      color: #555;
-      background: #f9fafb;
-    }
-    td code {
-      background: #f3f4f6;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 13px;
-      color: #7c3aed;
-    }
-    .footer {
-      margin-top: 48px;
-      padding-top: 24px;
-      border-top: 1px solid #eee;
-      font-size: 13px;
-      color: #999;
-    }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid #eee; font-size: 14px; }
+    th { font-weight: 600; color: #555; background: #f9fafb; }
+    td code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #7c3aed; }
+    .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid #eee; font-size: 13px; color: #999; }
     strong { color: #111; }
     code { font-family: "SF Mono", Monaco, Consolas, monospace; }
+    a { color: #7c3aed; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .nav { margin-bottom: 24px; font-size: 14px; }
+    .nav a { color: #7c3aed; }
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="nav"><a href="./index.html">&larr; Back to Home</a></div>
     <h1>Privacy Policy</h1>
     <p class="updated">LinkedIn AI Networking Assistant &middot; Last updated: July 12, 2026</p>
 
@@ -121,9 +72,7 @@
     <h2>Browser Permissions</h2>
     <p>The Extension requests only the minimum permissions required to function:</p>
     <table>
-      <thead>
-        <tr><th>Permission</th><th>Why it's needed</th></tr>
-      </thead>
+      <thead><tr><th>Permission</th><th>Why it's needed</th></tr></thead>
       <tbody>
         <tr><td><code>storage</code></td><td>Used to store your profile, settings, message history, and optionally API key (Custom Mode only) locally in your browser.</td></tr>
         <tr><td><code>activeTab</code></td><td>Used to read the currently open LinkedIn profile page after you explicitly click "Generate Messages."</td></tr>
@@ -263,11 +212,10 @@
     <p>If you have questions about this privacy policy or the Extension's data practices, please contact:</p>
     <ul>
       <li><strong>Email:</strong> <a href="mailto:stevenli2007@berkeley.edu">stevenli2007@berkeley.edu</a></li>
-      <li><strong>GitHub Issues:</strong> repository URL to be configured before publication</li>
     </ul>
 
     <div class="footer">
-      This privacy policy is bundled with the LinkedIn AI Networking Assistant Chrome Extension. Source code available in the project repository at <code>docs/PRIVACY_POLICY.md</code>.
+      &copy; 2026 LinkedIn AI Networking Assistant. See also: <a href="./terms-of-use.html">Terms of Use</a>.
     </div>
   </div>
 </body>

@@ -1,6 +1,6 @@
 # Terms of Use — LinkedIn AI Networking Assistant
 
-**Last updated:** 2026-06-27
+**Last updated:** 2026-07-12
 
 ## 1. Acceptance of Terms
 
@@ -8,7 +8,9 @@ By installing and using the LinkedIn AI Networking Assistant Chrome Extension ("
 
 ## 2. Description of Service
 
-The Extension is a browser-based productivity tool that generates draft LinkedIn connection request messages using AI. It reads publicly visible profile information from LinkedIn pages you visit, combines it with your own profile data, and uses the DeepSeek API to produce suggested messages.
+The Extension is a browser-based productivity tool that generates draft LinkedIn connection request messages using AI. It reads publicly visible profile information from LinkedIn pages you visit, combines it with your own profile data, and uses an AI provider (currently DeepSeek) accessed via the Extension's backend proxy to produce suggested messages.
+
+The Extension offers two modes: **Shared Mode** (default, no API key required, rate-limited) and **Custom Mode** (user provides their own DeepSeek API key).
 
 The Extension is a **drafting tool only**. It does not send messages, connection requests, or any other communication on your behalf.
 
@@ -18,9 +20,9 @@ The Extension is a **drafting tool only**. It does not send messages, connection
 
 You are solely responsible for complying with [LinkedIn's User Agreement](https://www.linkedin.com/legal/user-agreement), [Privacy Policy](https://www.linkedin.com/legal/privacy-policy), and any other applicable terms when using this Extension. The Extension is not affiliated with or endorsed by LinkedIn.
 
-### 3.2 DeepSeek Terms
+### 3.2 AI Provider Terms
 
-You are responsible for obtaining and maintaining a valid DeepSeek API key, and for complying with [DeepSeek's Terms of Service](https://www.deepseek.com/). You are responsible for any API usage fees incurred.
+In Shared Mode, AI requests use the developer's shared API key via the backend proxy, subject to rate limiting (10 requests/minute per client). In Custom Mode, you are responsible for obtaining and maintaining a valid DeepSeek API key, for complying with [DeepSeek's Terms of Service](https://www.deepseek.com/), and for any API usage fees incurred.
 
 ### 3.3 Lawful Use
 

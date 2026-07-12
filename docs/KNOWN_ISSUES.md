@@ -29,7 +29,8 @@ This file tracks all known issues, limitations, and risks. It is updated at the 
 - **Description:** The user must obtain their own DeepSeek API Key and paste it into the settings page. Non-technical users may not know what an API key is or how to apply for one.
 - **Temporary Solution:** User follows the DeepSeek API documentation to apply for a key; developer can provide a step-by-step guide.
 - **Planned Fix Version:** Phase 09 (Backend Proxy — proxy provides shared key for free tier users)
-- **Status:** Open
+- **Status:** Fixed
+- **Fix Notes:** Phase 09 introduced Shared Mode — the default mode uses a developer-provided API key via the backend proxy. Users no longer need to obtain their own API key. Custom Mode remains available for users who prefer to use their own key.
 
 ---
 
@@ -39,7 +40,8 @@ This file tracks all known issues, limitations, and risks. It is updated at the 
 - **Description:** Each message generation consumes the user's own DeepSeek API quota. Heavy users may find this expensive.
 - **Temporary Solution:** User sets a low `temperature` to reduce token usage; use short profile data.
 - **Planned Fix Version:** Phase 09 (Backend Proxy — server-side quota management or hybrid mode)
-- **Status:** Open
+- **Status:** Fixed
+- **Fix Notes:** Phase 09 Shared Mode uses a developer-provided API key with rate limiting (10 req/min per client). Users no longer bear LLM costs in Shared Mode. Custom Mode users still use their own quota.
 
 ---
 
@@ -49,7 +51,8 @@ This file tracks all known issues, limitations, and risks. It is updated at the 
 - **Description:** `chrome.storage.local` is accessible to any Chrome extension that has the `storage` permission. The API key is stored in plaintext.
 - **Temporary Solution:** User should only install trusted extensions; avoid using the extension on a shared computer.
 - **Planned Fix Version:** Phase 09 (Backend Proxy — eliminates client-side API key storage)
-- **Status:** Open
+- **Status:** Mitigated
+- **Fix Notes:** Phase 09 Shared Mode eliminates client-side API key storage entirely — no API key is stored in the browser. Custom Mode users still store their key in `chrome.storage.local`, but this is now optional. Users concerned about security should use Shared Mode.
 
 ---
 
@@ -129,9 +132,9 @@ This file tracks all known issues, limitations, and risks. It is updated at the 
 
 | Status | Count |
 |--------|-------|
-| Open | 8 |
-| Mitigated | 2 |
-| Fixed | 0 |
+| Open | 5 |
+| Mitigated | 3 |
+| Fixed | 3 |
 | Won't Fix | 0 |
 
 ---

@@ -1,6 +1,6 @@
 # Chrome Web Store Submission Checklist
 
-**Last updated:** 2026-06-27
+**Last updated:** 2026-07-12
 
 This checklist covers all requirements for submitting the LinkedIn AI Networking Assistant to the Chrome Web Store. It is organized by submission phase.
 
@@ -27,7 +27,7 @@ This checklist covers all requirements for submitting the LinkedIn AI Networking
 | 2.5 | CSP configured in manifest.json | ✅ | `script-src 'self'; object-src 'self'` |
 | 2.6 | All icons present (16, 32, 48, 128 px) | ✅ | Located in `dist/icons/` |
 | 2.7 | `privacy.html` bundled and accessible | ✅ | Registered in `web_accessible_resources` |
-| 2.8 | No unnecessary permissions requested | ✅ | Only `storage` + `activeTab`; host: linkedin.com + api.deepseek.com |
+| 2.8 | No unnecessary permissions requested | ✅ | Only `storage` + `activeTab`; host: linkedin.com + backend proxy (linkedin-ai-backend.stevenli2007.workers.dev) |
 | 2.9 | Package as `.zip` of `dist/` contents | ⬜ | Do before uploading: `cd dist && zip -r ../extension-v1.0.0.zip .` |
 
 ---
@@ -39,8 +39,8 @@ This checklist covers all requirements for submitting the LinkedIn AI Networking
 | # | Item | Status | Notes |
 |---|------|--------|-------|
 | 3.1.1 | Extension name | ✅ | "LinkedIn AI Assistant" |
-| 3.1.2 | Summary (132 chars max) | ⬜ | Draft needed. Suggestion: "Generate personalized LinkedIn connection messages with AI. 4 styles, one click, zero automation." |
-| 3.1.3 | Detailed description (16,000 chars max) | ⬜ | Draft needed — see Section 8 below |
+| 3.1.2 | Summary (132 chars max) | ✅ | "Generate personalized LinkedIn connection messages with AI. 4 styles, zero setup, zero automation. Your data stays on your device." |
+| 3.1.3 | Detailed description (16,000 chars max) | ✅ | Updated 2026-07-12 — see Section 8 below |
 | 3.1.4 | Category | ⬜ | Suggested: "Productivity" |
 | 3.1.5 | Language | ⬜ | "English" (or "English + Chinese" if multilingual listing) |
 
@@ -70,10 +70,10 @@ Google requires you to justify each permission and explain your data usage.
 
 | # | Item | Status | Notes |
 |---|------|--------|-------|
-| 4.1 | Justify `storage` permission | ✅ | "Stores user profile, API key, and settings locally in browser" |
+| 4.1 | Justify `storage` permission | ✅ | "Stores user profile, settings, message history, and optionally API key (Custom Mode only) locally in browser" |
 | 4.2 | Justify `activeTab` permission | ✅ | "Reads the currently open LinkedIn profile when user clicks Generate" |
 | 4.3 | Justify `host_permissions: linkedin.com` | ✅ | "Content script reads visible profile text for message generation" |
-| 4.4 | Justify `host_permissions: api.deepseek.com` | ✅ | "Direct API calls to DeepSeek for AI message generation" |
+| 4.4 | Justify `host_permissions: linkedin-ai-backend.stevenli2007.workers.dev` | ✅ | "All AI requests go through our backend proxy for rate limiting, shared API key management, and provider abstraction. No direct third-party API calls from the client." |
 | 4.5 | Data usage disclosure (Privacy Policy) | ✅ | `privacy.html` bundled + `docs/PRIVACY_POLICY.md` |
 | 4.6 | No remote code execution | ✅ | CSP blocks `unsafe-eval` and `unsafe-inline` |
 | 4.7 | No `eval()` or dynamic script injection | ✅ | Verified in code audit |
@@ -133,7 +133,7 @@ Google requires you to justify each permission and explain your data usage.
 
 ### Short Summary (132 chars)
 
-> Generate personalized LinkedIn connection messages with AI. 4 styles, one click, zero automation. Your data stays on your device.
+> Generate personalized LinkedIn connection messages with AI. 4 styles, zero setup, zero automation. Your data stays on your device.
 
 ### Detailed Description
 
@@ -150,28 +150,36 @@ Stop staring at the blank "Add a note" box. With one click, this extension analy
 KEY FEATURES
 
 ✦ One-click generation — Open any LinkedIn profile, click "Generate Messages," and get 4 tailored options instantly.
-✦ Smart common-ground detection — The AI compares your profile with the target's to find shared schools, companies, industries, or interests, and naturally weaves them into each message.
+✦ Smart common-ground detection — Click "Find Common Points" and the AI compares your profile with the target's to find shared schools, companies, industries, or interests. Pick one to emphasize in the generated messages.
 ✦ Copy, Edit, Regenerate — Every message is fully editable. Copy to clipboard, edit inline, or regenerate a single style without affecting the others.
+✦ Adjustable message length — Set a custom character limit (50–1000 chars) to control how long your messages are. Saved automatically.
 ✦ Profile sync — Import your own LinkedIn profile with one click. AI refines it into clean, structured data for better message generation.
+✦ Message history — Optionally record when you connect with someone, which style you used, and what common ground you found. Export to CSV anytime. Off by default — you decide whether to enable it.
 ✦ Zero automation — This extension NEVER sends connection requests, clicks buttons, or posts anything on your behalf. Every message is reviewed and sent manually by you.
+
+TWO MODES
+
+✦ Shared Mode (default) — No setup required. AI requests go through our backend proxy with a shared API key. Free for users, with rate limiting to ensure fair use.
+✦ Custom Mode — For users who prefer their own DeepSeek API key. Enter your key in Settings and all requests use your own quota. Your key is stored locally and never sent to our servers.
 
 PRIVACY FIRST
 
-Your data stays on your device. No backend server, no analytics, no tracking. Your DeepSeek API key and profile data are stored locally in Chrome and never uploaded to any developer-controlled server. Read our full Privacy Policy inside the extension.
+Your profile data and settings stay on your device using Chrome's local storage. AI requests are sent to our backend proxy (linkedin-ai-backend.stevenli2007.workers.dev) which forwards them to the AI provider — your data is never stored on our servers. No analytics, no tracking, no selling data. Read our full Privacy Policy inside the extension.
 
 HOW IT WORKS
 
-1. Enter your DeepSeek API key in Settings (get one at platform.deepseek.com)
+1. Click the extension icon — Shared Mode works out of the box (no API key needed)
 2. Sync or manually enter your profile
 3. Open any LinkedIn profile page
-4. Click "Generate Messages"
-5. Review, edit, and copy your favorite message
-6. Paste it into LinkedIn's "Add a note" box
+4. Optionally click "Find Common Points" to discover shared connections
+5. Click "Generate Messages"
+6. Review, edit, and copy your favorite message
+7. Paste it into LinkedIn's "Add a note" box
 
 REQUIREMENTS
 
 • Chrome browser (Manifest V3)
-• A DeepSeek API key (user-provided, stored locally)
+• No API key required for Shared Mode. Custom Mode supports user-provided DeepSeek API keys.
 
 DISCLAIMER
 
