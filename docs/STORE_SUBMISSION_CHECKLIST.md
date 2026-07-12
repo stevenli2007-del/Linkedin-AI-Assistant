@@ -41,8 +41,8 @@ This checklist covers all requirements for submitting the LinkedIn AI Networking
 | 3.1.1 | Extension name | ✅ | "LinkedIn AI Assistant" |
 | 3.1.2 | Summary (132 chars max) | ✅ | "Generate personalized LinkedIn connection messages with AI. 4 styles, zero setup, zero automation. Your data stays on your device." |
 | 3.1.3 | Detailed description (16,000 chars max) | ✅ | Updated 2026-07-12 — see Section 8 below |
-| 3.1.4 | Category | ⬜ | Suggested: "Productivity" |
-| 3.1.5 | Language | ⬜ | "English" (or "English + Chinese" if multilingual listing) |
+| 3.1.4 | Category | ✅ | "Productivity" |
+| 3.1.5 | Language | ✅ | "English" |
 
 ### 3.2 Visual Assets
 
@@ -129,11 +129,11 @@ Google requires you to justify each permission and explain your data usage.
 
 | # | Item | Status | Notes |
 |---|------|--------|-------|
-| 7.1 | Upload `.zip` to Chrome Web Store Developer Dashboard | ⬜ | |
-| 7.2 | Fill in all store listing fields | ⬜ | Use drafts from Section 8 |
+| 7.1 | Upload `.zip` to Chrome Web Store Developer Dashboard | ⬜ | `linkedin-ai-assistant-v1.0.0-public-beta.zip` (94 KB) — see phases/Phase10-3_Store_Submission_Guide.md |
+| 7.2 | Fill in all store listing fields | ⬜ | All content prepared — see phases/Phase10-3_Store_Submission_Guide.md |
 | 7.3 | Submit for review | ⬜ | Review typically takes 1–7 business days |
 | 7.4 | Respond to reviewer feedback if rejected | ⬜ | Common: permission justification, privacy policy clarity |
-| 7.5 | Publish after approval | ⬜ | |
+| 7.5 | Publish after approval | ⬜ | Set Visibility = Unlisted for Public Beta |
 | 7.6 | Update `docs/ReleasePlan.md` with launch date | ⬜ | |
 
 ---
