@@ -45,7 +45,68 @@ English
 
 ---
 
-## Step 3: Detailed Description
+## Step 3: Privacy Tab
+
+The Dashboard has a **Privacy** tab with several required fields. Fill them as follows:
+
+### 3.1 Single Purpose Description
+
+```
+This extension helps users generate personalized LinkedIn connection request messages. It reads the visible profile content of the LinkedIn page the user is currently viewing, compares it with the user's own imported profile, and generates editable message suggestions. The extension does not send connection requests, automate clicks, or post content on behalf of the user.
+```
+
+### 3.2 Permission Justification
+
+The form shows three justification fields. Copy the exact text for each:
+
+**`storage justification`:**
+```
+Stores the user's own LinkedIn profile, app settings, generated message history, and optional custom API key locally in the browser. All data remains on the user's device.
+```
+
+**`activeTab justification`:**
+```
+Reads the currently active LinkedIn profile page only when the user explicitly clicks the "Generate Messages" or "Find Common Points" button in the popup.
+```
+
+**`Host permission justification`:**
+```
+The linkedin.com host permission is required for the content script to read visible profile text on LinkedIn pages. The backend host permission (linkedin-ai-backend.stevenli2007.workers.dev) is required so AI generation requests can be routed through our backend proxy for rate limiting and shared API key management. No direct third-party API calls are made from the extension.
+```
+
+### 3.3 Remote Code
+
+**Select:** `No, I am not using remote code`
+
+**Why:** The extension only executes JavaScript bundled inside the package. Calls to the backend proxy return JSON/text responses (AI-generated messages), not executable code. The manifest's `content_security_policy` is `script-src 'self'; object-src 'self'`, which prohibits remote scripts.
+
+*(If the Dashboard pre-selected "Yes", switch it to "No" and leave the Justification field empty.)*
+
+### 3.4 Data Usage
+
+**Check only:** `Website content`
+
+**Leave unchecked:** All other options (PII, Health, Financial, Authentication, Personal communications, Location, Web history, User activity).
+
+**Data usage justification:**
+```
+The extension reads the visible text content of the LinkedIn profile page the user is currently viewing in order to generate personalized connection messages. This content is sent to our backend proxy, forwarded to the AI provider for message generation, and is not stored on our servers. The user's own imported profile and settings are stored locally using Chrome's storage API.
+```
+
+**Certifications — check all three boxes:**
+- `I do not sell or transfer user data to third parties, outside of the approved use cases`
+- `I do not use or transfer user data for purposes that are unrelated to my item's single purpose`
+- `I do not use or transfer user data to determine creditworthiness or for lending purposes`
+
+### 3.5 Privacy Policy URL
+
+```
+https://stevenli2007-del.github.io/Linkedin-AI-Assistant/privacy-policy.html
+```
+
+---
+
+## Step 4: Detailed Description
 
 Copy the entire block below (between the lines, not including the lines):
 
@@ -100,7 +161,7 @@ This extension is an independent productivity tool and is not affiliated with, e
 
 ---
 
-## Step 4: Upload Screenshots
+## Step 5: Upload Screenshots
 
 Upload **all 5 screenshots** from `store-assets/`. Use the `store-screenshot-*` versions (already sized for CWS):
 
@@ -114,7 +175,7 @@ Upload **all 5 screenshots** from `store-assets/`. Use the `store-screenshot-*` 
 
 ---
 
-## Step 5: Upload Store Icon
+## Step 6: Upload Store Icon
 
 Upload the 128×128 icon:
 ```
@@ -124,7 +185,7 @@ public/icons/icon128.png
 
 ---
 
-## Step 6: Fill in Links
+## Step 7: Fill in Links
 
 | Field | Value |
 |-------|-------|
@@ -133,20 +194,6 @@ public/icons/icon128.png
 | **Support Email** | `stevenli2007@berkeley.edu` |
 | **Privacy Policy URL** | `https://stevenli2007-del.github.io/Linkedin-AI-Assistant/privacy-policy.html` |
 
----
-
-## Step 7: Permissions Justification
-
-When CWS asks you to justify permissions (in the "Permissions" tab or during submission), use these:
-
-| Permission | Justification |
-|-----------|---------------|
-| `storage` | "Stores user profile, settings, message history, and optionally API key (Custom Mode only) locally in the browser." |
-| `activeTab` | "Reads the currently open LinkedIn profile when the user explicitly clicks Generate Messages." |
-| `host_permissions: linkedin.com` | "Content script reads visible profile text on LinkedIn pages for message generation. Does not modify the page or interact with LinkedIn's DOM." |
-| `host_permissions: linkedin-ai-backend.stevenli2007.workers.dev` | "All AI requests go through our backend proxy for rate limiting, shared API key management, and provider abstraction. No direct third-party API calls from the client." |
-
----
 
 ## Step 8: Set Visibility
 
@@ -167,10 +214,11 @@ In the Dashboard, find the **Visibility** setting:
 4. You'll get an email when it's approved or if changes are needed
 
 ### Common rejection reasons (and how we've addressed them):
-- **Permission justification unclear** → We've prepared clear justifications (Step 7)
+- **Permission justification unclear** → We've prepared clear justifications (Step 3)
 - **Privacy Policy incomplete** → We have a comprehensive policy at a public URL
 - **Single purpose violation** → Our single purpose is generating LinkedIn connection messages
 - **Host permissions too broad** → We only request linkedin.com (required) and our own backend (required)
+- **Remote code policy violation** → We do not execute remote code; all JS is bundled in the package
 
 ### If rejected:
 - Google will tell you which policy was violated
@@ -183,14 +231,22 @@ In the Dashboard, find the **Visibility** setting:
 - [ ] ZIP uploaded
 - [ ] Name: "LinkedIn AI Assistant"
 - [ ] Summary filled (130 chars)
-- [ ] Detailed description pasted
 - [ ] Category: Productivity
 - [ ] Language: English
+- [ ] **Privacy Tab**
+  - [ ] Single purpose description filled
+  - [ ] `storage` justification filled
+  - [ ] `activeTab` justification filled
+  - [ ] `Host permission` justification filled
+  - [ ] Remote code set to **No**
+  - [ ] Data usage: only `Website content` checked
+  - [ ] Data usage justification filled
+  - [ ] All three certifications checked
+  - [ ] Privacy Policy URL filled
+- [ ] Detailed description pasted
 - [ ] 5 screenshots uploaded
 - [ ] Store icon uploaded
 - [ ] Homepage URL filled
 - [ ] Support URL filled
-- [ ] Privacy Policy URL filled
-- [ ] Permissions justification filled
 - [ ] Visibility set to **Unlisted**
 - [ ] Click "Submit for Review"
