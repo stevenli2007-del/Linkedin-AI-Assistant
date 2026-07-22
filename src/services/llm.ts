@@ -301,6 +301,35 @@ async function callBackendAPI(
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
+/**
+ * Smart truncation: shortens text to maxLength while trying to end at a sentence boundary.
+ * Falls back to word boundary, then hard truncate if needed.
+ */
+function enforceMaxLength(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+
+  // Try to find the last sentence ending (. ! ?) within limit
+  const sentenceEnd = Math.max(
+    text.lastIndexOf(".", maxLength),
+    text.lastIndexOf("!", maxLength),
+    text.lastIndexOf("?", maxLength)
+  );
+
+  if (sentenceEnd > maxLength * 0.7) {
+    // Only use sentence boundary if it's not too short (at least 70% of limit)
+    return text.slice(0, sentenceEnd + 1).trim();
+  }
+
+  // Try word boundary (last space within limit)
+  const lastSpace = text.lastIndexOf(" ", maxLength);
+  if (lastSpace > maxLength * 0.7) {
+    return text.slice(0, lastSpace).trim() + "...";
+  }
+
+  // Hard truncate with ellipsis
+  return text.slice(0, maxLength - 3).trim() + "...";
+}
+
 export async function generateMessages(
   apiMode: "shared" | "custom",
   customApiKey: string | null,
@@ -309,10 +338,12 @@ export async function generateMessages(
     model?: string;
     temperature?: number;
     maxTokens?: number;
+    maxMessageLength?: number; // Enforce character limit on output
   }
 ): Promise<GeneratedMessage[]> {
   const temperature = options?.temperature ?? 0.7;
   const maxTokens = options?.maxTokens ?? 1024;
+  const maxMessageLength = options?.maxMessageLength;
 
   const messages: BackendMessage[] = [
     { role: "system", content: prompt.systemPrompt },
@@ -331,12 +362,19 @@ export async function generateMessages(
   const parsed = parseResponse(rawContent);
   const now = Date.now();
 
-  return parsed.messages.map((msg) => ({
-    messageId: generateId(),
-    messageStyle: msg.messageStyle as GeneratedMessage["messageStyle"],
-    messageContent: msg.messageContent.trim(),
-    generatedTime: now,
-  }));
+  return parsed.messages.map((msg) => {
+    let content = msg.messageContent.trim();
+    // Enforce max message length if specified
+    if (maxMessageLength && maxMessageLength > 0 && content.length > maxMessageLength) {
+      content = enforceMaxLength(content, maxMessageLength);
+    }
+    return {
+      messageId: generateId(),
+      messageStyle: msg.messageStyle as GeneratedMessage["messageStyle"],
+      messageContent: content,
+      generatedTime: now,
+    };
+  });
 }
 
 export async function regenerateMessage(
@@ -348,6 +386,7 @@ export async function regenerateMessage(
     model?: string;
     temperature?: number;
     maxTokens?: number;
+    maxMessageLength?: number; // Enforce character limit on output
   }
 ): Promise<GeneratedMessage> {
   const generated = await generateMessages(apiMode, customApiKey, prompt, options);

@@ -146,6 +146,7 @@ function App() {
         {
           model: settings.model,
           temperature: settings.temperature,
+          maxMessageLength: settings.maxMessageLength,
         }
       );
       setMessages(generated);
@@ -310,6 +311,7 @@ function App() {
         {
           model: settings.model,
           temperature: settings.temperature,
+          maxMessageLength: settings.maxMessageLength,
         }
       );
 

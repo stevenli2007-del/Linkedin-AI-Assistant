@@ -128,6 +128,40 @@ User filled Chrome Web Store Developer Dashboard with AI guidance:
 
 ---
 
+## 9. Post-Submission Bug Fixes (v1.0.1 candidate)
+
+### Fix: Maximum Message Length Not Enforced (2026-07-22)
+
+| Field | Value |
+|-------|-------|
+| **Issue ID** | 10-3-8-1 |
+| **Severity** | Medium (functional correctness) |
+| **Reported by** | User (beta testing) |
+| **Date Fixed** | 2026-07-22 |
+
+**Problem:** User set max message length to 200 characters, but LLM generated messages with 235 characters. The `maxMessageLength` setting was only passed as a prompt instruction to the LLM, with no post-processing enforcement.
+
+**Root Cause:**
+- `prompt.ts` instructed LLM "must be under X characters" (soft constraint)
+- LLMs don't always strictly follow character count instructions
+- `generateMessages()` / `regenerateMessage()` only applied `.trim()` on output (no length validation)
+
+**Fix Applied (3 files):**
+1. **`src/services/llm.ts`**:
+   - Added `enforceMaxLength()` helper with smart truncation strategy:
+     - Sentence boundary (`. ! ?`) if within 70%+ of limit
+     - Word boundary (last space) fallback
+     - Hard truncate + `"..."` ellipsis as final fallback
+   - Added optional `maxMessageLength` parameter to `generateMessages()`
+   - Added optional `maxMessageLength` parameter to `regenerateMessage()`
+2. **`src/popup/App.tsx`**:
+   - Updated `handleGenerate()` to pass `maxMessageLength: settings.maxMessageLength`
+   - Updated `handleRegenerate()` to pass `maxMessageLength: settings.maxMessageLength`
+
+**Impact on CWS Submission:** This fix is NOT in the submitted v1.0.0 package. It will be included in the next version update (v1.0.1) after CWS approval or if re-submission is required.
+
+---
+
 ## 8. Sign-off
 
 **Submitted by:** Steven Li (user operation in CWS Dashboard)

@@ -33,6 +33,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **10-2-1:** Profile data lost after reopening popup — `handlePreviewConfirm` now persists to `chrome.storage.local` immediately.
 - **10-2-2:** AI-generated messages exceeding LinkedIn's 300-character connection note limit — user-configurable length limit now constrains LLM output.
 - **10-2-3:** Profile sync capturing incomplete data — rewritten `refineProfile` prompt with field-level instructions and increased raw text cap.
+- **10-3-8-1:** Maximum message length not enforced — LLM could generate messages exceeding the configured character limit (e.g., 235 chars when set to 200). Fixed by adding `enforceMaxLength()` post-processing in `llm.ts` with smart truncation (sentence boundary → word boundary → hard truncate). Both `generateMessages()` and `regenerateMessage()` now accept and enforce `maxMessageLength` parameter. Calling code in `App.tsx` passes the setting through.
 - **I1:** Backend test files (`test-*.js`) scattered in `backend/` root — moved to `backend/tests/`.
 - **I2:** Hardcoded backend URL throughout extension code — extracted to `src/config.ts` (`BACKEND_URL`).
 - **I3:** Hardcoded API version string (`/api/v1/`) — extracted to `src/config.ts` (`API_ENDPOINTS`).
