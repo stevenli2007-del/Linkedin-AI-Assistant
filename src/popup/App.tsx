@@ -532,8 +532,8 @@ function App() {
         onClick={handleGenerate}
         disabled={isLoading || regeneratingStyles.size > 0 || !settingsLoaded || (settings.apiMode === "custom" && !settings.apiKey.trim())}
         className="w-full py-2.5 rounded-apple bg-brand-600 text-white font-medium text-sm
-                   hover:bg-brand-700 active:scale-[0.98] transition-all
-                   disabled:opacity-50 disabled:cursor-not-allowed"
+                  hover:bg-brand-700 active:scale-[0.98] transition-all
+                  disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <span className="flex items-center justify-center gap-2">
@@ -725,8 +725,8 @@ function App() {
               onChange={(e) => setEditDraft(e.target.value)}
               rows={6}
               className="w-full px-3 py-2 text-xs border border-gray-300 rounded-apple
-                         focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500
-                         resize-none text-gray-700 leading-relaxed"
+                        focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500
+                        resize-none text-gray-700 leading-relaxed"
             />
             <div className="flex justify-end gap-2 mt-4">
               <button
