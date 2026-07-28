@@ -1,6 +1,6 @@
 /**
  * 全局类型定义
- * Phase 09 — Backend Proxy
+ * Backend Proxy
  */
 
 // ==================== Provider 相关 ====================
@@ -9,15 +9,11 @@ export interface Message {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
-
 export interface GenerateRequest {
   messages: Message[];
   temperature?: number;
   maxTokens?: number;
-  /** 由 Backend 自动选择 Provider，Extension 无需指定 */
-  // provider?: string; // 故意注释掉，强调 Provider 选择权在 Backend
 }
-
 export interface GenerateResponse {
   success: boolean;
   data?: {
@@ -27,19 +23,17 @@ export interface GenerateResponse {
       completionTokens: number;
       totalTokens: number;
     };
-    provider: string; // 仅用于日志，不返回给 Extension
+    provider: string;
   };
   error?: string;
   requestId: string;
 }
-
-// ==================== Refine Profile 相关 ====================
+// ==================== Refine Profile ====================
 
 export interface RefineProfileRequest {
   rawProfileText: string;
   instruction?: string;
 }
-
 export interface RefineProfileResponse {
   success: boolean;
   data?: {
@@ -53,38 +47,77 @@ export interface RefineProfileResponse {
   error?: string;
   requestId: string;
 }
-
-// ==================== Provider 抽象 ====================
+// ==================== AI Provider ====================
 
 export interface AIProvider {
   name: string;
-  generate(request: GenerateRequest): Promise<GenerateResponse['data']>;
-  refineProfile(request: RefineProfileRequest): Promise<RefineProfileResponse['data']>;
-}
+  generate(
+    request: GenerateRequest,
+    apiKey?: string
+  ): Promise<GenerateResponse["data"]>;
 
-// ==================== 请求上下文 ====================
+  refineProfile(
+    request: RefineProfileRequest,
+    apiKey?: string
+  ): Promise<RefineProfileResponse["data"]>;
+}
+// ==================== Request Context ====================
 
 export interface RequestContext {
   requestId: string;
   clientId: string;
+
   extensionVersion: string;
   backendVersion: string;
   apiVersion: string;
+
   userAgent?: string;
   ip?: string;
-  apiMode: 'shared' | 'custom';
-  customApiKey?: string; // 仅 Custom Mode 时使用，不保存
+
+  apiMode: "shared" | "custom";
+  /**
+   * 用户自己的 API Key
+   * Backend 不保存
+   */
+  customApiKey?: string;
+
+  /**
+   * 用户选择的 Provider
+   * DeepSeek / OpenAI / Ollama
+   */
+  provider?: AIProviderType;
+}
+// ==================== Provider Type ====================
+export type AIProviderType =
+  | "deepseek"
+  | "openai"
+  | "ollama";
+// ==================== Provider Config ====================
+
+export interface ProviderConfig {
+  model: string;
+  apiEndpoint: string;
+  timeout?: number;
+  temperature?: number;
+  maxTokens?: number;
 }
 
-// ==================== 环境变量 ====================
+// ==================== Environment ====================
 
 export interface Env {
-  DEEPSEEK_API_KEY: string;
-  // 未来扩展：
-  // OPENAI_API_KEY?: string;
-  // CLAUDE_API_KEY?: string;
+
+  /**
+   * Shared API Keys
+   */
+
+  DEEPSEEK_API_KEY?: string;
+  OPENAI_API_KEY?: string;
+  /**
+   * Ollama 一般没有 API Key，
+   * 只需要 URL
+   */
+  OLLAMA_BASE_URL?: string;
   API_VERSION: string;
-  ENVIRONMENT: 'development' | 'production';
-  // KV Storage for rate limiting
+  ENVIRONMENT: "development" | "production";
   RATE_LIMIT_STORE: KVNamespace;
 }

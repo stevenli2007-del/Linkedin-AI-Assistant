@@ -4,7 +4,7 @@
     "module": "ES2022",
     "lib": ["ES2021"],
     "types": ["@cloudflare/workers-types"],
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -16,6 +16,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["./src/**/*"],
+  "include": ["./src/**/*",
+              "./src/global.d.ts"  ],
   "exclude": ["node_modules", "dist", "tests"]
 }
