@@ -8,8 +8,6 @@ import defaultPrompt from "./system/default.md";
 import linkedinPrompt from "./system/linkedin.md";
 import recruiterPrompt from "./system/recruiter.md";
 
-import articleTemplate from "./templates/article.md";
-import commentTemplate from "./templates/comment.md";
 import summaryTemplate from "./templates/summary.md";
 
 const promptMap: Record<string, string> = {
@@ -19,8 +17,6 @@ const promptMap: Record<string, string> = {
     "system/recruiter": recruiterPrompt,
 
     // templates
-    "templates/article": articleTemplate,
-    "templates/comment": commentTemplate,
     "templates/summary": summaryTemplate,
 };
 
