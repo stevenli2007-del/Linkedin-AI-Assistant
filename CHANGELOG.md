@@ -10,6 +10,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased] — Phase 10 Beta Testing
 
 ### Added
+- **Chrome Web Store Public Beta Live!** — Extension approved by Google (2026-07-26), status: **Published – unlisted**. Install link: https://chrome.google.com/webstore/detail/linkedin-ai-assistant/jeknmkmekajcbffbfijmmmcakpbbcoa
 - User-configurable message length limit — input field on main popup (default 300 characters, range 50–1000), auto-saved to `chrome.storage.local`, passed to LLM prompt to constrain output length.
 - "Find Common Points" feature — AI identifies 5 shared commonalities between user and target profile, user selects one, message generation incorporates the selection for personalized outreach.
 - History feature with CSV export — new `History.tsx` component recording timestamp, target name, message style, common points used, and generated message content. CSV download for spreadsheet analysis. Default off (opt-in via Settings toggle).
@@ -33,13 +34,19 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **10-2-1:** Profile data lost after reopening popup — `handlePreviewConfirm` now persists to `chrome.storage.local` immediately.
 - **10-2-2:** AI-generated messages exceeding LinkedIn's 300-character connection note limit — user-configurable length limit now constrains LLM output.
 - **10-2-3:** Profile sync capturing incomplete data — rewritten `refineProfile` prompt with field-level instructions and increased raw text cap.
-- **10-3-8-1:** Maximum message length not enforced — LLM could generate messages exceeding the configured character limit (e.g., 235 chars when set to 200). Fixed by adding `enforceMaxLength()` post-processing in `llm.ts` with smart truncation (sentence boundary → word boundary → hard truncate). Both `generateMessages()` and `regenerateMessage()` now accept and enforce `maxMessageLength` parameter. Calling code in `App.tsx` passes the setting through.
 - **I1:** Backend test files (`test-*.js`) scattered in `backend/` root — moved to `backend/tests/`.
 - **I2:** Hardcoded backend URL throughout extension code — extracted to `src/config.ts` (`BACKEND_URL`).
 - **I3:** Hardcoded API version string (`/api/v1/`) — extracted to `src/config.ts` (`API_ENDPOINTS`).
 - **I4:** `DEFAULT_SETTINGS` duplicated in `settings.ts` and `App.tsx` — unified to single export.
 - **I5:** Magic numbers in `extractor.ts` (scroll delays, attempt counts) — replaced with named constants.
 - **I6:** CORS `Access-Control-Allow-Origin: *` in backend — restricted to `chrome-extension://` origins only.
+
+---
+
+## [1.0.1] — Patch Release (2026-07-30)
+
+### Fixed
+- **10-3-8-1:** Maximum message length not enforced — LLM could generate messages exceeding the configured character limit (e.g., 235 chars when set to 200). Fixed by adding `enforceMaxLength()` post-processing in `llm.ts` with smart truncation (sentence boundary → word boundary → hard truncate). Both `generateMessages()` and `regenerateMessage()` now accept and enforce `maxMessageLength` parameter. Calling code in `App.tsx` passes the setting through.
 
 ---
 

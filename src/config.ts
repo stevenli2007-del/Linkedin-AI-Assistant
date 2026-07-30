@@ -13,4 +13,5 @@ export const API_VERSION = "v1";
 export const API_ENDPOINTS = {
   generate: `${BACKEND_URL}/api/${API_VERSION}/generate`,
   refineProfile: `${BACKEND_URL}/api/${API_VERSION}/refine-profile`,
+  refineMessage: `${BACKEND_URL}/api/${API_VERSION}/refine-message`,
 } as const;

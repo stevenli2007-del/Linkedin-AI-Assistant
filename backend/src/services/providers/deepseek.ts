@@ -4,7 +4,7 @@
  * 未来可扩展 OpenAI、Claude、Gemini
  */
 
-import { AIProvider, GenerateRequest, GenerateResponse, RefineProfileRequest, RefineProfileResponse } from '../../types';
+import { AIProvider, GenerateRequest, GenerateResponse, RefineProfileRequest, RefineProfileResponse, RefineMessageRequest, RefineMessageResponse } from '../../types';
 import { estimateTokens } from '../provider';
 
 export class DeepSeekProvider implements AIProvider {
@@ -92,6 +92,51 @@ Return ONLY the JSON object, no markdown fences, no explanations.`;
 
     return {
       refinedProfile: response.choices[0].message.content,
+      usage: {
+        promptTokens: response.usage?.prompt_tokens || estimateTokens(JSON.stringify(messages)),
+        completionTokens: response.usage?.completion_tokens || estimateTokens(response.choices[0].message.content),
+        totalTokens: response.usage?.total_tokens || 0
+      }
+    };
+  }
+
+  async refineMessage(request: RefineMessageRequest, apiKey?: string): Promise<RefineMessageResponse['data']> {
+    const key = apiKey || this.apiKey;
+
+    const systemPrompt = `You are an AI assistant that refines LinkedIn networking messages based on specific user instructions.
+
+You will receive:
+1. The ORIGINAL message that was previously generated
+2. An INSTRUCTION describing how the user wants it improved (e.g. "make it shorter", "more casual", "add a compliment about their recent post")
+3. Optional context: the USER's own profile and the TARGET recipient's profile
+
+Rules:
+- Apply ONLY the requested changes — don't rewrite things the user didn't ask to change
+- Preserve the overall tone and purpose of the original message
+- Keep the message appropriate for LinkedIn professional networking
+- Return ONLY the refined message text — no explanations, no markdown, no JSON wrapper
+- If the instruction is unclear, make your best reasonable interpretation`;
+
+    let userMessage = `ORIGINAL MESSAGE:\n${request.originalContent}\n\nINSTRUCTION: ${request.instruction}`;
+
+    if (request.userProfile) {
+      userMessage += `\n\nMY PROFILE:\n${request.userProfile}`;
+    }
+    if (request.targetProfile) {
+      userMessage += `\n\nRECIPIENT PROFILE:\n${request.targetProfile}`;
+    }
+
+    userMessage += '\n\nPlease return ONLY the refined message text.';
+
+    const messages = [
+      { role: 'system' as const, content: systemPrompt },
+      { role: 'user' as const, content: userMessage }
+    ];
+
+    const response = await this.callAPI(messages, key);
+
+    return {
+      refinedMessage: response.choices[0].message.content.trim(),
       usage: {
         promptTokens: response.usage?.prompt_tokens || estimateTokens(JSON.stringify(messages)),
         completionTokens: response.usage?.completion_tokens || estimateTokens(response.choices[0].message.content),

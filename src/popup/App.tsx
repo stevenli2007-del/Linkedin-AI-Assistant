@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { TargetProfile, GeneratedMessage, MessageStyle, HistoryEntry } from "@/types";
 import { buildPrompt, buildSingleStylePrompt, buildFindCommonPrompt } from "@/services/prompt";
-import { generateMessages, regenerateMessage, findCommonPoints } from "@/services/llm";
+import { generateMessages, regenerateMessage, findCommonPoints, refineMessage } from "@/services/llm";
 import { loadSettings, saveSettings, saveHistoryEntry, DEFAULT_SETTINGS, type AppSettings } from "@/services/settings";
 import { Settings } from "./Settings";
 import { History } from "./History";
@@ -35,6 +35,10 @@ function App() {
   const [editDraft, setEditDraft] = useState("");
   const editTextareaRef = useRef<HTMLTextAreaElement>(null);
   const toastTimerRef = useRef<number | null>(null);
+
+  // Refine message state
+  const [refiningMessages, setRefiningMessages] = useState<Set<string>>(new Set());
+  const [refineInputs, setRefineInputs] = useState<Record<string, string>>({});
 
   // Find Common feature state
   const [commonPoints, setCommonPoints] = useState<string[]>([]);
@@ -347,6 +351,73 @@ function App() {
     }
   };
 
+  const handleRefine = async (msg: GeneratedMessage) => {
+    const instruction = (refineInputs[msg.messageId] || "").trim();
+    if (!instruction) {
+      setError("Please enter an improvement instruction.");
+      return;
+    }
+
+    if (settings.apiMode === "custom" && !settings.apiKey.trim()) {
+      setError("Please enter your DeepSeek API Key in Settings first (Custom Mode).");
+      return;
+    }
+
+    setRefiningMessages((prev) => new Set(prev).add(msg.messageId));
+    setError("");
+
+    try {
+      const userProfileStr = settings.userProfile.userName
+        ? Object.entries(settings.userProfile)
+            .filter(([, v]) => v.trim())
+            .map(([k, v]) => `${k}: ${v}`)
+            .join("\n")
+        : undefined;
+
+      const targetProfileStr = targetProfile
+        ? Object.entries(targetProfile)
+            .filter(([, v]) => v?.trim())
+            .map(([k, v]) => `${k}: ${v}`)
+            .join("\n")
+        : undefined;
+
+      const refined = await refineMessage(
+        settings.apiMode,
+        settings.apiMode === "custom" ? settings.apiKey.trim() : null,
+        msg.messageContent,
+        instruction,
+        userProfileStr,
+        targetProfileStr,
+      );
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.messageId === msg.messageId
+            ? { ...m, messageContent: refined }
+            : m
+        )
+      );
+
+      setRefineInputs((prev) => {
+        const next = { ...prev };
+        delete next[msg.messageId];
+        return next;
+      });
+
+      showToast("Message improved");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to refine message.";
+      setError(message);
+    } finally {
+      setRefiningMessages((prev) => {
+        const next = new Set(prev);
+        next.delete(msg.messageId);
+        return next;
+      });
+    }
+  };
+
   const orderedMessages = STYLE_ORDER.map(
     (style) => messages.find((msg) => msg.messageStyle === style)
   ).filter(Boolean) as GeneratedMessage[];
@@ -552,43 +623,11 @@ function App() {
         </div>
       )}
 
-      {/* Target Profile Summary */}
+      {/* Target Name */}
       {targetProfile && (
-        <div className="mt-4 p-3 rounded-apple bg-gray-50 text-xs text-gray-600">
-          <p className="font-semibold text-gray-900 text-sm mb-1">
-            {targetProfile.targetName}
-          </p>
-          {targetProfile.targetHeadline && (
-            <p className="mb-1">{targetProfile.targetHeadline}</p>
-          )}
-          {(targetProfile.targetCompany || targetProfile.targetSchool) && (
-            <div className="flex flex-wrap gap-x-3 gap-y-1 text-gray-500 mt-2">
-              {targetProfile.targetCompany && (
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-brand-500" />
-                  {targetProfile.targetCompany}
-                </span>
-              )}
-              {targetProfile.targetSchool && (
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-brand-500" />
-                  {targetProfile.targetSchool}
-                </span>
-              )}
-              {targetProfile.targetLocation && (
-                <span className="inline-flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-brand-500" />
-                  {targetProfile.targetLocation}
-                </span>
-              )}
-            </div>
-          )}
-          {targetProfile.targetAbout && (
-            <p className="mt-2 text-gray-500 line-clamp-3">
-              {targetProfile.targetAbout}
-            </p>
-          )}
-        </div>
+        <p className="mt-3 text-xs text-gray-400">
+          Messaging: <span className="text-gray-600 font-medium">{targetProfile.targetName}</span>
+        </p>
       )}
 
       {/* Messages */}
@@ -641,6 +680,47 @@ function App() {
                 <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {msg.messageContent}
                 </p>
+
+                {/* Refine Input + Improve Button */}
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="text"
+                      placeholder="Improve: e.g. make it shorter"
+                      value={refineInputs[msg.messageId] || ""}
+                      onChange={(e) =>
+                        setRefineInputs((prev) => ({
+                          ...prev,
+                          [msg.messageId]: e.target.value,
+                        }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleRefine(msg);
+                      }}
+                      className="flex-1 px-2.5 py-1.5 text-[11px] border border-gray-200 rounded-apple
+                                 focus:outline-none focus:ring-1 focus:ring-brand-500/20 focus:border-brand-400
+                                 text-gray-700 placeholder-gray-400"
+                    />
+                    <button
+                      onClick={() => handleRefine(msg)}
+                      disabled={
+                        refiningMessages.has(msg.messageId) ||
+                        !(refineInputs[msg.messageId]?.trim())
+                      }
+                      className="shrink-0 px-3 py-1.5 text-[11px] font-medium text-brand-600
+                                 bg-brand-50 hover:bg-brand-100 rounded-apple transition-colors
+                                 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {refiningMessages.has(msg.messageId) ? (
+                        <span className="inline-flex items-center gap-1">
+                          <span className="w-3 h-3 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin" />
+                        </span>
+                      ) : (
+                        "Improve"
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
             );
           })}
@@ -662,7 +742,7 @@ function App() {
       <div className="mt-5 pt-4 border-t border-gray-100">
         <div className="flex items-center justify-center gap-1.5">
           <p className="text-[10px] text-gray-400">
-            LinkedIn AI Assistant v1.0.0
+            LinkedIn AI Assistant v1.0.1
           </p>
           <span className="text-[10px] font-medium text-brand-600 bg-brand-50 px-1.5 py-0.5 rounded-full">
             Beta

@@ -95,6 +95,28 @@ This backlog is a planning document only. Items here are not implemented unless 
 - Send a follow-up survey to closed beta participants.
 - **Phase:** Phase 10
 
+### S6 — Expanded Message Options (Premium)
+
+- Increase from 4 free message styles to 8 total (4 free + 4 premium).
+- Premium styles could include: Direct/Concise, Storytelling, Humorous/Warm, Industry-Specific.
+- **Phase:** Phase 14
+- **Status:** Planned — depends on Phase 13 subscription infrastructure
+
+### S7 — AI LinkedIn Post Generation (Premium)
+
+- Premium users can upload an image (e.g., event photo, project screenshot).
+- AI generates a full LinkedIn post based on the image content and user context.
+- **Phase:** Phase 14
+- **Status:** Planned — depends on Phase 13 subscription infrastructure
+
+### S8 — Subscription System
+
+- Integrate payment processing (Stripe or equivalent) for monthly/annual tiers.
+- Free tier: 4 message styles + refinement + preference memory.
+- Premium tier: 8 styles + Post generation + advanced memory.
+- **Phase:** Phase 14 (infrastructure in Phase 13)
+- **Status:** Planned
+
 ---
 
 ## 4. Could
@@ -175,3 +197,4 @@ This backlog is a planning document only. Items here are not implemented unless 
 |------|--------|--------|
 | 2026-06-26 | Initial Backlog with MoSCoW prioritization | WorkBuddy |
 | 2026-06-27 | M1, M2, S1, S2, S3 marked complete (Phase 08 done) | WorkBuddy |
+| 2026-07-30 | Added S6–S8 (premium content + subscription), C7–C9 (mobile, per-target memory, true RAG) for Phase 14/15 planning | WorkBuddy |

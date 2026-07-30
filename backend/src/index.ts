@@ -16,6 +16,7 @@ import { buildRequestContext } from './middleware/request-id';
 import { checkRateLimit, rateLimitResponse } from './middleware/rate-limiter';
 import { handleGenerate } from './routes/generate';
 import { handleRefineProfile } from './routes/refine-profile';
+import { handleRefineMessage } from './routes/refine-message';
 import { healthCheckResponse, errorResponse } from './utils/response';
 
 export default {
@@ -59,6 +60,9 @@ export default {
       } else if (path === `/api/${env.API_VERSION}/refine-profile` && method === 'POST') {
         // 优化 LinkedIn Profile
         response = await handleRefineProfile(request, env, ctx, requestContext);
+      } else if (path === `/api/${env.API_VERSION}/refine-message` && method === 'POST') {
+        // 改进已生成的消息
+        response = await handleRefineMessage(request, env, ctx, requestContext);
       } else {
         // 404
         response = errorResponse('Not Found', requestContext, 404);

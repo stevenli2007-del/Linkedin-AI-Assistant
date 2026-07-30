@@ -56,6 +56,10 @@ Phase 11: Chrome Web Store Release
 Phase 12: Growth
         ↓
 Phase 13: SaaS Transformation (RAG Memory, Cloud Sync, Subscriptions)
+        ↓
+Phase 14: Premium Content Generation (8 Options, Image-to-Post, Subscriptions)
+        ↓
+Phase 15: Mobile App
 ```
 
 ---
@@ -307,8 +311,8 @@ These phases prepare the stabilized MVP for real users, backend scale, and publi
 | 10-3-4 | Execute functional test checklist (16 tests, all passed) | ✅ Complete (2026-07-12) |
 | 10-3-5 | Build and package extension ZIP (94 KB, 11 files) | ✅ Complete (2026-07-12) |
 | 10-3-6 | Prepare Chrome Web Store store listing content + submission guide | ✅ Complete (2026-07-12) |
-| 10-3-7 | Submit to Chrome Web Store as Unlisted (user operation) | ✅ Complete (2026-07-20) |
-| 10-3-8 | Distribute Unlisted link to 100-500 users, collect feedback (2-4 weeks) | ⬜ Next |
+| 10-3-7 | Submit to Chrome Web Store as Unlisted (user operation) | ✅ **PUBLISHED** (2026-07-26) — Status: Published – unlisted |
+| 10-3-8 | Distribute Unlisted link to 100-500 users, collect feedback (2-4 weeks) | 🔄 **IN PROGRESS** |
 | 10-3-9 | Process public beta feedback and fix bugs | ⬜ Pending |
 | 10-3-10 | Write Phase 10-3 Done Report and sign off | ⬜ Pending |
 
@@ -371,6 +375,48 @@ These phases prepare the stabilized MVP for real users, backend scale, and publi
   - `phases/Phase13_Done.md` is completed.
 
 > **Note:** This phase is exploratory and will be fully scoped when the team is ready to pivot from a free extension to a SaaS product. The RAG architecture in particular requires careful design around data privacy, user consent, and GDPR/CCPA compliance.
+>
+> **Partial Fulfillment (2026-07-30):** The Preference Memory feature implemented in Phase 10-3-8-P2 (saving user refinement prompts and injecting them into future message generation) fulfills a subset of the RAG Memory goal — specifically the "learn from past interactions and personalize messages over time" objective. Full RAG (vector database, semantic retrieval, cross-device cloud sync) remains in Phase 13 scope.
+
+---
+
+## 5.1 Phase 14 — Premium Content Generation (Future, Post-SaaS Pivot)
+
+- **Goal:** Introduce premium paid features that expand the product beyond free connection message generation.
+- **Dependencies:**
+  - Phase 13 Completed (subscription infrastructure in place)
+  - Sufficient user base to validate premium demand
+  - User approves the freemium monetization model
+- **Deliverables:**
+  - **14-1: Expanded Message Options** — increase from 4 free message styles to 8 total (4 free + 4 premium). Premium styles could include: Direct/Concise, Storytelling, Humorous/Warm, Industry-Specific.
+  - **14-2: AI LinkedIn Post Generation** — premium users can upload an image (e.g., event photo, project screenshot) and the AI generates a full LinkedIn post (not just a connection message) based on the image content and user context.
+  - **14-3: Subscription System** — integrate payment processing (Stripe or equivalent) for monthly/annual subscription tiers. Free tier retains 4 message styles + refinement; Premium tier unlocks 8 styles + Post generation + advanced memory.
+- **Exit Criteria:**
+  - Payment integration is live and processes real transactions.
+  - At least 3 premium message styles are available.
+  - Image-to-Post generation produces high-quality results (user satisfaction > 80%).
+  - `phases/Phase14_Done.md` is completed.
+
+> **Note:** This phase depends on SaaS infrastructure from Phase 13. The freemium model (free core + paid premium) is documented in `docs/Decisions.md` ADR-015.
+
+---
+
+## 5.2 Phase 15 — Mobile App (Future)
+
+- **Goal:** Bring the LinkedIn AI Assistant experience to mobile devices.
+- **Dependencies:**
+  - Phase 14 Completed or validated market demand
+  - User approves mobile investment
+- **Deliverables:**
+  - **15-1: Technology Selection** — evaluate React Native vs. PWA vs. native Swift/Kotlin. Consider data sync strategy with existing Chrome extension.
+  - **15-2: Mobile MVP** — core features on mobile: profile input (manual or paste), message generation, refinement, preference memory sync.
+  - **15-3: Cross-Device Sync** — sync user profile, settings, and refinement memory between Chrome extension and mobile app.
+- **Exit Criteria:**
+  - Mobile app is published to at least one app store (iOS or Android).
+  - Cross-device sync works for user profile and refinement memory.
+  - `phases/Phase15_Done.md` is completed.
+
+> **Note:** Mobile is a lower priority than desktop growth and monetization. This phase is deferred until the Chrome extension has validated product-market fit and the team has capacity for a second platform. See `docs/Decisions.md` ADR-016.
 
 ---
 
@@ -401,4 +447,5 @@ No phase is considered complete without this report and explicit user review.
 | 2026-06-28 | Added Phase 13: SaaS Transformation (RAG memory, cloud sync, subscriptions) | WorkBuddy |
 | 2026-07-12 | Phase 10: Added I1–I6 audit fix sub-task table; added completion dates to 10-2 series | WorkBuddy |
 | 2026-07-12 | Phase 10-3: Added Public Beta sub-task table (10-3-1 through 10-3-10); 10-3-1 to 10-3-6 marked complete | WorkBuddy |
-| 2026-07-20 | Phase 10-3-7: Marked complete — submitted to CWS as Unlisted; Extension ID: jeknmkmekajcbffbfijmmmcakpbbcoa | WorkBuddy |
+| 2026-07-26 | Phase 10-3-7: CWS 审核通过，状态变更为 **Published – unlisted**；进入 10-3-8 分发阶段 | WorkBuddy |
+| 2026-07-30 | Added Phase 14 (Premium Content Generation) and Phase 15 (Mobile App); noted Phase 13 RAG partially fulfilled by 10-3-8-P2 Preference Memory | WorkBuddy |

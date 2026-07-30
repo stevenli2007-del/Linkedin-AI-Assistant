@@ -7,7 +7,7 @@ import { buildProfileRefinePrompt } from "./prompt";
 import { loadClientId, saveClientId } from "./client-id";
 import { API_ENDPOINTS } from "@/config";
 
-const EXTENSION_VERSION = "1.0.0";
+const EXTENSION_VERSION = "1.0.1";
 const FETCH_TIMEOUT_MS = 30_000;
 
 // Retry configuration
@@ -526,6 +526,84 @@ export async function refineProfile(
   }
 
   return profile;
+}
+
+/**
+ * Refine an existing generated message based on user's instruction.
+ * Sends the original message + instruction to the backend, which returns an improved version.
+ *
+ * @param apiMode - "shared" or "custom"
+ * @param customApiKey - User's API key (required for custom mode)
+ * @param originalContent - The original message content to refine
+ * @param instruction - User's refinement instruction (e.g. "make it shorter")
+ * @param userProfile - Optional user's profile text for context
+ * @param targetProfile - Optional target's profile text for context
+ * @returns The refined message string
+ */
+export async function refineMessage(
+  apiMode: "shared" | "custom",
+  customApiKey: string | null,
+  originalContent: string,
+  instruction: string,
+  userProfile?: string,
+  targetProfile?: string,
+): Promise<string> {
+  const clientId = await loadClientId();
+  const requestId = generateRequestId();
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-Request-Id": requestId,
+    "X-Client-Id": clientId,
+    "X-Extension-Version": EXTENSION_VERSION,
+    "X-Api-Mode": apiMode,
+  };
+
+  if (apiMode === "custom" && customApiKey) {
+    headers["X-Custom-Api-Key"] = customApiKey;
+  }
+
+  const body = JSON.stringify({
+    originalContent,
+    instruction,
+    userProfile: userProfile || undefined,
+    targetProfile: targetProfile || undefined,
+  });
+
+  try {
+    const response = await fetch(API_ENDPOINTS.refineMessage, {
+      method: "POST",
+      headers,
+      body,
+    });
+
+    if (!response.ok) {
+      let errorBody = "";
+      try { errorBody = await response.text(); } catch { /* ignore */ }
+      throw new Error(`Backend API error (HTTP ${response.status}): ${errorBody.slice(0, 200)}`);
+    }
+
+    const data = (await response.json()) as {
+      success: boolean;
+      data?: { refinedMessage: string };
+      error?: string;
+    };
+
+    if (!data.success) {
+      throw new Error(data.error || "Failed to refine message.");
+    }
+
+    if (!data.data || !data.data.refinedMessage) {
+      throw new Error("Backend returned an empty refined message.");
+    }
+
+    return data.data.refinedMessage;
+  } catch (err) {
+    if (err instanceof Error) {
+      throw err;
+    }
+    throw new Error("Network error: Unable to reach backend API.");
+  }
 }
 
 /**

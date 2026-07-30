@@ -4,7 +4,7 @@
  * Phase 09 实现 DeepSeek，未来可扩展 OpenAI、Claude、Gemini
  */
 
-import { Message, GenerateRequest, GenerateResponse, RefineProfileRequest, RefineProfileResponse } from '../types';
+import { Message, GenerateRequest, GenerateResponse, RefineProfileRequest, RefineProfileResponse, RefineMessageRequest, RefineMessageResponse } from '../types';
 
 export interface AIProvider {
   /** Provider 名称（用于日志和调试） */
@@ -23,6 +23,13 @@ export interface AIProvider {
    * @param apiKey 可选，Custom Mode 时传入用户 API Key
    */
   refineProfile(request: RefineProfileRequest, apiKey?: string): Promise<RefineProfileResponse['data']>;
+
+  /**
+   * 改进已生成的消息
+   * @param request 改进请求（原消息 + 改进指令 + 上下文）
+   * @param apiKey 可选，Custom Mode 时传入用户 API Key
+   */
+  refineMessage(request: RefineMessageRequest, apiKey?: string): Promise<RefineMessageResponse['data']>;
 }
 
 /**

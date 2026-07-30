@@ -126,3 +126,54 @@ User can:
 - The user can generate four personalized connection messages within 5 seconds.
 - The generated messages should feel natural and personalized.
 - The user should only need one click after opening the extension.
+
+---
+
+## 7. Future Directions (V2+)
+
+The following features are explicitly **out of scope for V1** but are documented here for long-term planning. They are assigned to future phases in `docs/Roadmap.md`.
+
+### 7.1 Message Refinement & Preference Memory (v1.1.0)
+
+- Users can refine any generated message by entering a custom prompt (e.g., "make it shorter", "more casual").
+- The AI returns an improved version of the message within the user's character limit.
+- Refinement prompts are saved and injected into future message generation, creating a personalized preference memory over time.
+- **Status:** Planned for Phase 10-3-8-P1/P2/P3.
+- **Note:** This is not full RAG (no vector database); it is a lightweight preference accumulation mechanism. True RAG remains a Phase 13 goal.
+
+### 7.2 Premium Content Generation (Phase 14)
+
+- **Expanded Message Options:** Increase from 4 free styles to 8 total (4 free + 4 premium). Premium styles may include Direct/Concise, Storytelling, Humorous/Warm, and Industry-Specific.
+- **AI LinkedIn Post Generation:** Premium users can upload an image and the AI generates a full LinkedIn post (not just a connection message) based on the image content and user context.
+- **Subscription System:** Freemium model — free tier retains core features; premium tier unlocks expanded options and Post generation.
+- **Monetization decision:** See `docs/Decisions.md` ADR-015.
+
+### 7.3 Mobile App (Phase 15)
+
+- Bring the LinkedIn AI Assistant to mobile devices (iOS/Android).
+- Cross-device sync of user profile, settings, and refinement memory.
+- **Priority decision:** See `docs/Decisions.md` ADR-016. Deferred until desktop product-market fit is validated.
+
+### 7.4 SaaS Transformation (Phase 13)
+
+- User account system with subscription tiers.
+- True RAG memory (vector database, semantic retrieval of past interactions).
+- Cloud history sync across devices.
+- Analytics dashboard (success rate tracking, style effectiveness).
+- **Partial fulfillment:** Preference Memory (7.1) fulfills a subset of the RAG goal. Full RAG requires vector database infrastructure.
+
+---
+
+## 8. V1 Scope Summary
+
+| Feature | V1 (Free) | V2+ (Premium) |
+|---------|-----------|---------------|
+| Message styles | 4 | 8 (4 free + 4 paid) |
+| Copy / Edit / Regenerate | ✅ | ✅ |
+| Message Refinement | ✅ (v1.1.0) | ✅ |
+| Preference Memory | ✅ (v1.1.0) | ✅ (advanced) |
+| AI LinkedIn Post generation | ❌ | ✅ (paid) |
+| Image upload | ❌ | ✅ (paid) |
+| Cloud sync | ❌ | ✅ (Phase 13) |
+| Mobile app | ❌ | ✅ (Phase 15) |
+| Automatic sending | ❌ Never | ❌ Never |

@@ -47,7 +47,31 @@ export interface RefineProfileResponse {
   error?: string;
   requestId: string;
 }
-// ==================== AI Provider ====================
+
+// ==================== Refine Message 相关 ====================
+
+export interface RefineMessageRequest {
+  originalContent: string;
+  instruction: string;
+  userProfile?: string;
+  targetProfile?: string;
+}
+
+export interface RefineMessageResponse {
+  success: boolean;
+  data?: {
+    refinedMessage: string;
+    usage?: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    };
+  };
+  error?: string;
+  requestId: string;
+}
+
+// ==================== Provider 抽象 ====================
 
 export interface AIProvider {
   name: string;
@@ -55,12 +79,16 @@ export interface AIProvider {
     request: GenerateRequest,
     apiKey?: string
   ): Promise<GenerateResponse["data"]>;
-
   refineProfile(
     request: RefineProfileRequest,
     apiKey?: string
   ): Promise<RefineProfileResponse["data"]>;
+  refineMessage(
+    request: RefineMessageRequest,
+    apiKey?: string
+  ): Promise<RefineMessageResponse["data"]>;
 }
+
 // ==================== Request Context ====================
 
 export interface RequestContext {

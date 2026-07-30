@@ -280,6 +280,46 @@ No new decision that conflicts with these records can be made without updating t
 
 ---
 
+### ADR-015: Freemium Monetization Model
+
+- **Status:** Accepted
+- **Context:** The extension is currently free with 4 message styles and basic refinement. To sustain development and fund cloud infrastructure (Phase 13+), a revenue model is needed. The team identified two premium directions: (1) expanded message options (8 total) and (2) AI LinkedIn Post generation from uploaded images. A paywall that blocks core functionality would harm user acquisition; a freemium model preserves the free tier while monetizing power features.
+- **Decision:** Adopt a Freemium model. Free tier retains 4 message styles + refinement + preference memory. Premium tier unlocks 8 message styles + image-to-Post generation + advanced memory features. Subscription managed via Stripe (or equivalent) integrated in Phase 14.
+- **Alternatives Considered:**
+  - Fully paid (no free tier): Rejected — blocks user acquisition and contradicts the product's growth strategy.
+  - Donation/Tip jar: Rejected — unreliable revenue, doesn't scale.
+  - One-time purchase: Rejected — doesn't support ongoing cloud/API costs for SaaS features.
+  - Ads: Rejected — conflicts with the minimal, professional UI design (ADR-010) and privacy-first stance.
+- **Consequences:**
+  - Free tier remains attractive for user acquisition.
+  - Premium features provide clear upgrade incentive without degrading core experience.
+  - Requires subscription infrastructure (Phase 13/14) and payment processing compliance.
+  - Free tier must remain genuinely useful — if free features degrade, users will churn instead of upgrading.
+  - Pricing strategy must be validated with real users before locking in.
+- **Date:** 2026-07-30
+- **Review Date:** 2027-01-30
+
+---
+
+### ADR-016: Mobile App Deferred to Phase 15
+
+- **Status:** Accepted
+- **Context:** The team identified mobile as a future direction. However, the Chrome Extension currently targets desktop LinkedIn users. Mobile development requires a separate codebase (or cross-platform framework), different distribution channels (App Store / Google Play), and cross-device sync infrastructure. Launching mobile before validating desktop product-market fit would spread resources too thin.
+- **Decision:** Defer mobile app development to Phase 15, after Phase 14 (Premium Content) is validated. Prioritize desktop growth, monetization, and SaaS infrastructure first.
+- **Alternatives Considered:**
+  - Parallel mobile development: Rejected — resource constraints, team is small (2 people).
+  - PWA wrapper of the extension: Rejected — Chrome Extension APIs are not available in PWA context; would require a separate web app.
+  - Mobile-first pivot: Rejected — desktop LinkedIn usage is higher for the target professional demographic.
+- **Consequences:**
+  - Desktop gets full focus until Phase 14 is complete.
+  - Mobile architecture decisions can be made with more data (user demand, sync requirements).
+  - Users who want mobile must wait — acceptable trade-off for a focused V1.
+  - Cross-device sync design should be considered early in Phase 13 to avoid rework.
+- **Date:** 2026-07-30
+- **Review Date:** 2027-01-30
+
+---
+
 ## 4. How to Add a New ADR
 
 When a new technical decision is made:
@@ -329,5 +369,7 @@ When a new technical decision is made:
 | ADR-012 | Content Security Policy | Accepted | 2027-06-26 |
 | ADR-013 | Backend Proxy Architecture | Accepted | 2026-12-31 |
 | ADR-014 | Provider Abstraction Layer | Accepted | 2026-12-31 |
+| ADR-015 | Freemium Monetization Model | Accepted | 2027-01-30 |
+| ADR-016 | Mobile App Deferred to Phase 15 | Accepted | 2027-01-30 |
 
 ---
