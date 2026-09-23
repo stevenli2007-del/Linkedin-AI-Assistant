@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { TargetProfile, GeneratedMessage, MessageStyle, HistoryEntry } from "@/types";
 import { buildPrompt, buildSingleStylePrompt, buildFindCommonPrompt } from "@/services/prompt";
 import { generateMessages, regenerateMessage, findCommonPoints, refineMessage } from "@/services/llm";
-import { loadSettings, saveSettings, saveHistoryEntry, DEFAULT_SETTINGS, type AppSettings } from "@/services/settings";
+import { loadSettings, loadHistory, saveSettings, saveHistoryEntry, DEFAULT_SETTINGS, type AppSettings } from "@/services/settings";
+import { formatRetrievedHistory, retrieveRelevantHistory } from "@/services/rag";
 import { Settings } from "./Settings";
 import { History } from "./History";
 
@@ -142,7 +143,19 @@ function App() {
       const profile = response.data as TargetProfile;
       setTargetProfile(profile);
 
-      const prompt = buildPrompt(settings.userProfile, profile, settings.maxMessageLength, selectedCommonPoint ?? undefined);
+      const history = settings.historyEnabled ? await loadHistory() : [];
+      const memory = formatRetrievedHistory(
+        retrieveRelevantHistory(profile, history, {
+          query: `${profile.targetName} ${profile.targetHeadline} ${profile.targetCompany} ${profile.targetAbout} ${profile.targetExperience} ${selectedCommonPoint ?? ""}`,
+        }),
+      );
+      const prompt = buildPrompt(
+        settings.userProfile,
+        profile,
+        settings.maxMessageLength,
+        selectedCommonPoint ?? undefined,
+        memory,
+      );
       const generated = await generateMessages(
         settings.apiMode,
         settings.apiMode === "custom" ? settings.apiKey.trim() : null,
@@ -301,11 +314,18 @@ function App() {
     setError("");
 
     try {
+      const history = settings.historyEnabled ? await loadHistory() : [];
+      const memory = formatRetrievedHistory(
+        retrieveRelevantHistory(targetProfile, history, {
+          query: `${targetProfile.targetName} ${targetProfile.targetHeadline} ${targetProfile.targetCompany} ${targetProfile.targetAbout} ${targetProfile.targetExperience}`,
+        }),
+      );
       const prompt = buildSingleStylePrompt(
         settings.userProfile,
         targetProfile,
         style,
         settings.maxMessageLength,
+        memory,
       );
       const regenerated = await regenerateMessage(
         settings.apiMode,

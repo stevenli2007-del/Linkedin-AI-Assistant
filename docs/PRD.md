@@ -139,7 +139,7 @@ The following features are explicitly **out of scope for V1** but are documented
 - The AI returns an improved version of the message within the user's character limit.
 - Refinement prompts are saved and injected into future message generation, creating a personalized preference memory over time.
 - **Status:** Planned for Phase 10-3-8-P1/P2/P3.
-- **Note:** This is not full RAG (no vector database); it is a lightweight preference accumulation mechanism. True RAG remains a Phase 13 goal.
+- **Note:** The shipped implementation now includes privacy-preserving local RAG over copied message history. A hosted vector database and cross-device sync remain optional Phase 13 SaaS enhancements.
 
 ### 7.2 Premium Content Generation (Phase 14)
 
@@ -157,10 +157,10 @@ The following features are explicitly **out of scope for V1** but are documented
 ### 7.4 SaaS Transformation (Phase 13)
 
 - User account system with subscription tiers.
-- True RAG memory (vector database, semantic retrieval of past interactions).
+- Hosted RAG memory and cross-device sync (local retrieval is implemented; cloud vector storage is future scope).
 - Cloud history sync across devices.
 - Analytics dashboard (success rate tracking, style effectiveness).
-- **Partial fulfillment:** Preference Memory (7.1) fulfills a subset of the RAG goal. Full RAG requires vector database infrastructure.
+- **Fulfillment:** Local retrieval over bounded Chrome history is implemented in `src/services/rag.ts` and is injected into generation and regeneration prompts. Cloud embeddings/vector storage are intentionally out of scope for the privacy-first extension.
 
 ---
 

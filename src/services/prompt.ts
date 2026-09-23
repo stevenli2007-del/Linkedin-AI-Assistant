@@ -194,6 +194,7 @@ export function buildSingleStylePrompt(
   targetProfile: TargetProfile,
   style: MessageStyle,
   maxMessageLength: number,
+  memoryContext?: string,
 ): PromptPayload {
   const userSection = buildUserProfileSection(userProfile);
   const targetSection = buildTargetProfileSection(targetProfile);
@@ -206,6 +207,8 @@ ${userSection}
 
 === TARGET PROFILE ===
 ${targetSection}
+
+${memoryContext ? `${memoryContext}\n` : ""}
 
 Generate 1 LinkedIn connection message in the ${style} style based on the above profiles.`;
 
@@ -221,6 +224,7 @@ export function buildPrompt(
   targetProfile: TargetProfile,
   maxMessageLength: number,
   selectedCommonPoint?: string,
+  memoryContext?: string,
 ): PromptPayload {
   const userSection = buildUserProfileSection(userProfile);
   const targetSection = buildTargetProfileSection(targetProfile);
@@ -233,6 +237,8 @@ ${userSection}
 
 === TARGET PROFILE ===
 ${targetSection}
+
+${memoryContext ? `${memoryContext}\n` : ""}
 
 Generate 4 LinkedIn connection messages based on the above profiles.`;
 

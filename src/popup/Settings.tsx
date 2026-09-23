@@ -529,9 +529,9 @@ export function Settings({ settings, onSave, onCancel }: SettingsProps) {
               Record copied messages
             </p>
             <p className="text-[10px] text-gray-500 mt-0.5 leading-relaxed">
-              When enabled, each message you copy is saved locally with the target's
-              name, style, and common points. You can view and export to CSV from the
-              History page. All data stays on your device.
+              When enabled, copied messages are saved locally and used as relevant
+              context for future messages. You can view and export them from History.
+              All data stays on your device.
             </p>
           </div>
           <button

@@ -137,8 +137,9 @@
     <h3>5. Message History (Optional)</h3>
     <ul>
       <li><strong>What:</strong> Records of messages you copied, including target name, target headline, message style, common point used, message content, and timestamp.</li>
-      <li><strong>How collected:</strong> When the history feature is enabled (off by default), copying a message records a history entry.</li>
+      <li><strong>How collected:</strong> When the history feature is enabled (off by default), copying a message records a history entry. Relevant entries may be selected locally as context for later message generation.</li>
       <li><strong>Where stored:</strong> Chrome local storage on your device. Maximum 500 entries.</li>
+      <li><strong>How used:</strong> Retrieval happens on-device using the target profile and saved history. Only selected context is included in the AI request; no history index or history database is sent to our servers.</li>
       <li><strong>Purpose:</strong> Allows you to review past connections and export to CSV for your own records.</li>
       <li><strong>User control:</strong> History is disabled by default. You can enable it, clear all entries, or export to CSV at any time.</li>
     </ul>

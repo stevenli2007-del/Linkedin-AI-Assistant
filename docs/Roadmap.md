@@ -376,7 +376,7 @@ These phases prepare the stabilized MVP for real users, backend scale, and publi
 
 > **Note:** This phase is exploratory and will be fully scoped when the team is ready to pivot from a free extension to a SaaS product. The RAG architecture in particular requires careful design around data privacy, user consent, and GDPR/CCPA compliance.
 >
-> **Partial Fulfillment (2026-07-30):** The Preference Memory feature implemented in Phase 10-3-8-P2 (saving user refinement prompts and injecting them into future message generation) fulfills a subset of the RAG Memory goal — specifically the "learn from past interactions and personalize messages over time" objective. Full RAG (vector database, semantic retrieval, cross-device cloud sync) remains in Phase 13 scope.
+> **Local RAG Fulfillment (2026-09-22):** The extension now provides privacy-preserving local RAG: copied history is bounded in Chrome storage, relevant prior interactions are retrieved with weighted lexical similarity and recency, and the selected context is injected into generation and regeneration prompts. Cloud vector storage, embeddings, and cross-device sync remain optional future SaaS enhancements.
 
 ---
 

@@ -79,8 +79,9 @@ Every AI-generated message must be reviewed and manually sent by you. The Extens
 ### 5. Message History (Optional)
 
 - **What:** Records of messages you copied, including target name, target headline, message style, common point used, message content, and timestamp.
-- **How collected:** When the history feature is enabled (off by default), copying a message records a history entry.
+- **How collected:** When the history feature is enabled (off by default), copying a message records a history entry. Relevant entries may be selected locally as context for later message generation.
 - **Where stored:** Chrome local storage on your device. Maximum 500 entries.
+- **How used:** Retrieval happens on-device using the target profile and saved history. Only the selected context is included in the AI request; no history index or history database is sent to our servers.
 - **Purpose:** Allows you to review past connections and export to CSV for your own records.
 - **User control:** History is disabled by default. You can enable it, clear all entries, or export to CSV at any time in the History view.
 

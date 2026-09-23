@@ -44,3 +44,8 @@ export interface HistoryEntry {
   messageContent: string;
   commonPoint: string;
 }
+
+/** A history item selected by the local retrieval pipeline for prompt context. */
+export interface RetrievedHistoryEntry extends HistoryEntry {
+  relevanceScore: number;
+}
