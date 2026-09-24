@@ -1,4 +1,4 @@
-import type { HistoryEntry, RetrievedHistoryEntry, TargetProfile } from "@/types";
+import type { HistoryEntry, RetrievedHistoryEntry, TargetProfile } from "../types";
 
 /**
  * Local RAG retrieval for the extension.
@@ -48,7 +48,8 @@ function entryText(entry: HistoryEntry): string {
 
 function weightedTokens(entry: HistoryEntry): Map<string, number> {
   const weights = new Map<string, number>();
-  const add = (value: string, weight: number) => {
+  const add = (value: unknown, weight: number) => {
+    if (typeof value !== "string") return;
     for (const token of tokenize(value)) {
       weights.set(token, (weights.get(token) ?? 0) + weight);
     }
@@ -61,13 +62,20 @@ function weightedTokens(entry: HistoryEntry): Map<string, number> {
   return weights;
 }
 
-function scoreEntry(query: string, entry: HistoryEntry, now: number): number {
+function scoreEntry(
+  query: string,
+  entry: HistoryEntry,
+  now: number,
+  inverseDocumentFrequency: Map<string, number>,
+): number {
   const queryTokens = new Set(tokenize(query));
   if (queryTokens.size === 0) return 0;
 
   const weights = weightedTokens(entry);
   let overlap = 0;
-  for (const token of queryTokens) overlap += weights.get(token) ?? 0;
+  for (const token of queryTokens) {
+    overlap += (weights.get(token) ?? 0) * (inverseDocumentFrequency.get(token) ?? 1);
+  }
 
   const normalizedQuery = query.toLocaleLowerCase();
   const normalizedEntry = entryText(entry).toLocaleLowerCase();
@@ -75,10 +83,12 @@ function scoreEntry(query: string, entry: HistoryEntry, now: number): number {
     .split(/\s+/)
     .filter((part) => part.length > 3 && normalizedEntry.includes(part)).length * 0.35;
 
+  if (overlap === 0 && phraseBonus === 0) return 0;
+
   // Prefer recent examples slightly, without allowing recency to beat relevance.
   const ageDays = Math.max(0, (now - entry.timestamp) / 86_400_000);
   const recencyBonus = Math.max(0, 0.5 - ageDays / 365);
-  return overlap + phraseBonus + recencyBonus;
+  return overlap / Math.sqrt(queryTokens.size) + phraseBonus + recencyBonus;
 }
 
 export function retrieveRelevantHistory(
@@ -89,13 +99,44 @@ export function retrieveRelevantHistory(
   const query = options.query?.trim() || profileText(target);
   const now = Date.now();
   const limit = Math.max(1, Math.min(10, options.limit ?? DEFAULT_LIMIT));
+  const validHistory = history.filter(
+    (entry) => entry && typeof entry.messageContent === "string" && entry.messageContent.trim(),
+  );
+  const documentFrequency = new Map<string, number>();
+  for (const entry of validHistory) {
+    for (const token of new Set(tokenize(entryText(entry)))) {
+      documentFrequency.set(token, (documentFrequency.get(token) ?? 0) + 1);
+    }
+  }
+  const inverseDocumentFrequency = new Map(
+    [...documentFrequency.entries()].map(([token, frequency]) => [
+      token,
+      Math.log((validHistory.length + 1) / (frequency + 1)) + 1,
+    ]),
+  );
 
-  return history
-    .filter((entry) => entry && typeof entry.messageContent === "string")
-    .map((entry) => ({ ...entry, relevanceScore: scoreEntry(query, entry, now) }))
+  const ranked = validHistory
+    .map((entry) => ({
+      ...entry,
+      relevanceScore: scoreEntry(query, entry, now, inverseDocumentFrequency),
+    }))
     .filter((entry) => entry.relevanceScore > 0)
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
-    .slice(0, limit);
+
+  // Avoid filling the context window with repeated copies of the same target.
+  // Two styles are enough to preserve useful tone examples without crowding out
+  // examples from other relationships.
+  const targetCounts = new Map<string, number>();
+  const selected: RetrievedHistoryEntry[] = [];
+  for (const entry of ranked) {
+    const targetKey = `${String(entry.targetName ?? "").trim().toLocaleLowerCase()}|${String(entry.targetCompany ?? "").trim().toLocaleLowerCase()}`;
+    const count = targetCounts.get(targetKey) ?? 0;
+    if (count >= 2) continue;
+    targetCounts.set(targetKey, count + 1);
+    selected.push(entry);
+    if (selected.length >= limit) break;
+  }
+  return selected;
 }
 
 export function formatRetrievedHistory(entries: RetrievedHistoryEntry[]): string {
